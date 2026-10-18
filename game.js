@@ -381,4 +381,5 @@ function addChatMessage(color, message) {
     const colorText = color === 'white' ? 'Белые' : 'Чёрные';
     el.innerHTML = `<span class="sender">${colorText}:</span> ${message}`;
     container.appendChild(el);
-    container.scrollTop = 
+    container.scrollTop = container.scrollHeight;
+}
