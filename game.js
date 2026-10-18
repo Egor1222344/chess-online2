@@ -1,15 +1,20 @@
+import { joinRoom } from 'https://cdn.jsdelivr.net/npm/trystero@0.20.1/dist/trystero-torrent.min.js';
+
+const APP_ID = 'chess-online-friend-game-v1';
+
 const PIECES = {
     'wp': '♙', 'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔',
     'bp': '♟', 'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚'
 };
 
-let peer = null;
-let conn = null;
-let isHost = false;
+let room = null;
 let myColor = null;
+let isHost = false;
 let chess = new Chess();
 let selectedSquare = null;
 let pendingPromotion = null;
+
+let sendInit, getInit, sendMove, getMove, sendChat, getChat, sendResign, getResign, sendRematch, getRematch;
 
 const screens = {
     main: document.getElementById('mainMenu'),
@@ -23,29 +28,37 @@ function showScreen(name) {
     screens[name].classList.add('active');
 }
 
-// Инициализация PeerJS (бесплатный публичный сервер, регистрация не нужна)
-function initPeer(callback) {
-    peer = new Peer({
-        config: {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' }
-            ]
-        },
-        debug: 2
+function setupActions() {
+    [sendInit, getInit] = room.makeAction('init');
+    [sendMove, getMove] = room.makeAction('move');
+    [sendChat, getChat] = room.makeAction('chat');
+    [sendResign, getResign] = room.makeAction('resign');
+    [sendRematch, getRematch] = room.makeAction('rematch');
+
+    getInit((color) => {
+        myColor = color;
+        startGame();
     });
-    
-    peer.on('open', (id) => {
-        console.log('Мой Peer ID:', id);
-        callback();
+
+    getMove((data) => {
+        chess.move(data.move);
+        updateAfterMove(data.move, data.result);
     });
-    
-    peer.on('error', (err) => {
-        console.error('Peer error:', err.type, err);
-        alert('Ошибка: ' + err.type + '. Подробности в консоли (F12)');
+
+    getChat((data) => {
+        addChatMessage(data.color, data.message);
+    });
+
+    getResign((data) => {
+        showGameOver(data.result);
+    });
+
+    getRematch(() => {
+        chess = new Chess();
+        document.getElementById('movesList').innerHTML = '';
+        document.getElementById('gameOverModal').classList.remove('active');
+        renderBoard();
+        updateStatus();
     });
 }
 
@@ -53,78 +66,44 @@ function initPeer(callback) {
 document.getElementById('createGameBtn').addEventListener('click', () => {
     isHost = true;
     myColor = Math.random() < 0.5 ? 'white' : 'black';
-    
-    initPeer(() => {
-        const link = `${window.location.origin}${window.location.pathname}?peer=${peer.id}`;
-        document.getElementById('roomLinkInput').value = link;
-        document.getElementById('yourColorDisplay').textContent = 
-            myColor === 'white' ? 'Белые' : 'Чёрные';
-        showScreen('waiting');
-        
-        peer.on('connection', (connection) => {
-            conn = connection;
-            setupConnection();
-            conn.on('open', () => {
-                conn.send({ 
-                    type: 'init', 
-                    color: myColor === 'white' ? 'black' : 'white' 
-                });
-                startGame();
-            });
-        });
+    const roomId = Math.random().toString(36).substr(2, 8);
+
+    room = joinRoom({ appId: APP_ID }, roomId);
+    setupActions();
+
+    const link = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+    document.getElementById('roomLinkInput').value = link;
+    document.getElementById('yourColorDisplay').textContent =
+        myColor === 'white' ? 'Белые' : 'Чёрные';
+    showScreen('waiting');
+
+    room.onPeerJoin((peerId) => {
+        sendInit(myColor === 'white' ? 'black' : 'white', peerId);
+        startGame();
     });
 });
 
-// === ПРИСОЕДИНЕНИЕ ПО ССЫЛКЕ ===
+// === ПРИСОЕДИНЕНИЕ ===
 window.addEventListener('load', () => {
     const params = new URLSearchParams(window.location.search);
-    const hostId = params.get('peer');
-    
-    if (hostId) {
+    const roomId = params.get('room');
+
+    if (roomId) {
         isHost = false;
         showScreen('connecting');
-        
-        initPeer(() => {
-            conn = peer.connect(hostId);
-            setupConnection();
-        });
+        room = joinRoom({ appId: APP_ID }, roomId);
+        setupActions();
     }
 });
-
-function setupConnection() {
-    conn.on('data', (data) => {
-        if (data.type === 'init') {
-            myColor = data.color;
-            startGame();
-        } else if (data.type === 'move') {
-            chess.move(data.move);
-            updateAfterMove(data.move, data.result);
-        } else if (data.type === 'chat') {
-            addChatMessage(data.color, data.message);
-        } else if (data.type === 'resign') {
-            showGameOver(data.result);
-        } else if (data.type === 'rematch') {
-            chess = new Chess();
-            document.getElementById('movesList').innerHTML = '';
-            document.getElementById('gameOverModal').classList.remove('active');
-            renderBoard();
-            updateStatus();
-        }
-    });
-    
-    conn.on('close', () => {
-        document.getElementById('gameStatus').textContent = '⚠️ Соперник отключился';
-    });
-}
 
 function startGame() {
     document.getElementById('yourColor').textContent = myColor === 'white' ? 'Белые' : 'Чёрные';
     document.getElementById('yourColor').className = `color-indicator ${myColor}`;
-    
+
     const oppColor = myColor === 'white' ? 'black' : 'white';
     document.getElementById('opponentColor').textContent = oppColor === 'white' ? 'Белые' : 'Чёрные';
     document.getElementById('opponentColor').className = `color-indicator ${oppColor}`;
-    
+
     showScreen('game');
     renderBoard();
     updateStatus();
@@ -133,12 +112,12 @@ function startGame() {
 function renderBoard() {
     const board = document.getElementById('chessboard');
     board.innerHTML = '';
-    
+
     const fen = chess.fen().split(' ')[0];
     const rows = fen.split('/');
     const isFlipped = myColor === 'black';
     const rowOrder = isFlipped ? [...rows].reverse() : rows;
-    
+
     for (let r = 0; r < 8; r++) {
         let fileIdx = 0;
         for (const char of rowOrder[r]) {
@@ -162,11 +141,11 @@ function createSquare(rankIdx, fileIdx, piece, isFlipped) {
     const file = String.fromCharCode(97 + actualFile);
     const rank = 8 - actualRank;
     const squareId = `${file}${rank}`;
-    
+
     const isLight = (actualRank + actualFile) % 2 === 0;
     square.className = `square ${isLight ? 'light' : 'dark'}`;
     square.dataset.square = squareId;
-    
+
     if (piece) {
         const color = piece === piece.toUpperCase() ? 'w' : 'b';
         const symbol = PIECES[`${color}${piece.toLowerCase()}`];
@@ -175,7 +154,7 @@ function createSquare(rankIdx, fileIdx, piece, isFlipped) {
         pieceEl.textContent = symbol;
         square.appendChild(pieceEl);
     }
-    
+
     square.addEventListener('click', () => handleSquareClick(squareId));
     return square;
 }
@@ -183,9 +162,9 @@ function createSquare(rankIdx, fileIdx, piece, isFlipped) {
 function handleSquareClick(squareId) {
     const turn = chess.turn() === 'w' ? 'white' : 'black';
     if (turn !== myColor) return;
-    
+
     const piece = chess.get(squareId);
-    
+
     if (!selectedSquare) {
         if (piece && isPieceMine(piece)) {
             selectedSquare = squareId;
@@ -215,7 +194,7 @@ function isPieceMine(piece) {
 function attemptMove(from, to) {
     const piece = chess.get(from);
     const isLastRank = (to[1] === '8' || to[1] === '1');
-    
+
     if (piece && piece.type === 'p' && isLastRank) {
         pendingPromotion = { from, to };
         document.getElementById('promotionModal').classList.add('active');
@@ -223,7 +202,7 @@ function attemptMove(from, to) {
         selectedSquare = null;
         return;
     }
-    
+
     doMove(from, to);
 }
 
@@ -240,17 +219,17 @@ document.querySelectorAll('.promotion-piece').forEach(el => {
 
 function doMove(from, to, promotion = 'q') {
     const move = chess.move({ from, to, promotion });
-    
+
     if (!move) {
         alert('Невозможный ход!');
         clearHighlights();
         selectedSquare = null;
         return;
     }
-    
+
     clearHighlights();
     selectedSquare = null;
-    
+
     let result = null;
     if (chess.in_checkmate()) {
         const winner = move.color === 'w' ? 'Белые' : 'Чёрные';
@@ -258,8 +237,8 @@ function doMove(from, to, promotion = 'q') {
     } else if (chess.in_draw()) {
         result = 'Ничья';
     }
-    
-    conn.send({ type: 'move', move: { from, to, promotion }, result });
+
+    sendMove({ move: { from, to, promotion }, result });
     updateAfterMove({ from, to }, result);
 }
 
@@ -267,12 +246,12 @@ function updateAfterMove(move, result) {
     renderBoard();
     updateStatus();
     addMoveToHistory(chess.history().slice(-1)[0]);
-    
+
     setTimeout(() => {
         highlightSquare(move.from, 'last-move');
         highlightSquare(move.to, 'last-move');
     }, 50);
-    
+
     if (result) {
         showGameOver(result);
     }
@@ -282,7 +261,7 @@ function updateStatus() {
     const el = document.getElementById('gameStatus');
     const turn = chess.turn() === 'w' ? 'white' : 'black';
     const turnText = turn === 'white' ? 'белые' : 'чёрные';
-    
+
     if (chess.in_checkmate()) {
         el.textContent = 'Мат!';
     } else if (chess.in_check()) {
@@ -325,7 +304,7 @@ document.getElementById('resignBtn').addEventListener('click', () => {
     if (!confirm('Сдаться?')) return;
     const winner = myColor === 'white' ? 'Чёрные' : 'Белые';
     const result = `${winner} победили (соперник сдался)`;
-    conn.send({ type: 'resign', result });
+    sendResign({ result });
     showGameOver(result);
 });
 
@@ -338,7 +317,7 @@ function requestRematch() {
     chess = new Chess();
     document.getElementById('movesList').innerHTML = '';
     document.getElementById('gameOverModal').classList.remove('active');
-    conn.send({ type: 'rematch' });
+    sendRematch({});
     renderBoard();
     updateStatus();
 }
@@ -350,17 +329,17 @@ document.getElementById('modalHomeBtn').addEventListener('click', () => {
     window.location.href = window.location.pathname;
 });
 
-document.getElementById('sendChatBtn').addEventListener('click', sendChat);
+document.getElementById('sendChatBtn').addEventListener('click', sendChatMessage);
 document.getElementById('chatInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendChat();
+    if (e.key === 'Enter') sendChatMessage();
 });
 
-function sendChat() {
+function sendChatMessage() {
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
     if (!message) return;
-    
-    conn.send({ type: 'chat', color: myColor, message });
+
+    sendChat({ color: myColor, message });
     addChatMessage(myColor, message);
     input.value = '';
 }
