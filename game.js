@@ -25,11 +25,27 @@ function showScreen(name) {
 
 // Инициализация PeerJS (бесплатный публичный сервер, регистрация не нужна)
 function initPeer(callback) {
-    peer = new Peer();
-    peer.on('open', () => callback());
+    peer = new Peer({
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' }
+            ]
+        },
+        debug: 2
+    });
+    
+    peer.on('open', (id) => {
+        console.log('Мой Peer ID:', id);
+        callback();
+    });
+    
     peer.on('error', (err) => {
-        console.error('Peer error:', err);
-        alert('Ошибка соединения. Попробуйте обновить страницу.');
+        console.error('Peer error:', err.type, err);
+        alert('Ошибка: ' + err.type + '. Подробности в консоли (F12)');
     });
 }
 
