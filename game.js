@@ -1,3 +1,4 @@
+console.log('game.js загружен!');
 import { joinRoom } from 'https://esm.run/trystero/torrent';
 
 const APP_ID = 'chess-online-friend-game-v1';
