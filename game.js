@@ -1,4 +1,4 @@
-import { joinRoom } from 'https://cdn.jsdelivr.net/npm/trystero@0.20.1/dist/trystero-torrent.min.js';
+import { joinRoom } from 'https://esm.run/trystero/torrent';
 
 const APP_ID = 'chess-online-friend-game-v1';
 
