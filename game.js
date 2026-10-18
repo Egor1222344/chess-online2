@@ -1,5 +1,17 @@
-console.log('game.js загружен!');
-import { joinRoom } from 'https://esm.run/trystero/torrent';
+console.log('✅ game.js загружен');
+console.log('Chess доступен:', typeof Chess !== 'undefined');
+console.log('trystero доступен:', typeof trystero !== 'undefined');
+
+const debugEl = document.getElementById('debugInfo');
+if (typeof trystero === 'undefined') {
+    debugEl.textContent = '⚠️ Ошибка: библиотека trystero не загрузилась';
+} else if (typeof Chess === 'undefined') {
+    debugEl.textContent = '⚠️ Ошибка: библиотека chess.js не загрузилась';
+} else {
+    debugEl.textContent = '✅ Всё готово к игре';
+}
+
+const { joinRoom } = trystero;
 
 const APP_ID = 'chess-online-friend-game-v1';
 
@@ -37,11 +49,13 @@ function setupActions() {
     [sendRematch, getRematch] = room.makeAction('rematch');
 
     getInit((color) => {
+        console.log('Получен цвет:', color);
         myColor = color;
         startGame();
     });
 
     getMove((data) => {
+        console.log('Получен ход:', data);
         chess.move(data.move);
         updateAfterMove(data.move, data.result);
     });
@@ -63,37 +77,52 @@ function setupActions() {
     });
 }
 
-// === СОЗДАНИЕ ИГРЫ ===
 document.getElementById('createGameBtn').addEventListener('click', () => {
-    isHost = true;
-    myColor = Math.random() < 0.5 ? 'white' : 'black';
-    const roomId = Math.random().toString(36).substr(2, 8);
+    console.log('Кнопка "Создать игру" нажата');
+    
+    try {
+        isHost = true;
+        myColor = Math.random() < 0.5 ? 'white' : 'black';
+        const roomId = Math.random().toString(36).substr(2, 8);
 
-    room = joinRoom({ appId: APP_ID }, roomId);
-    setupActions();
+        console.log('Создаём комнату:', roomId, 'мой цвет:', myColor);
 
-    const link = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
-    document.getElementById('roomLinkInput').value = link;
-    document.getElementById('yourColorDisplay').textContent =
-        myColor === 'white' ? 'Белые' : 'Чёрные';
-    showScreen('waiting');
+        room = joinRoom({ appId: APP_ID }, roomId);
+        setupActions();
 
-    room.onPeerJoin((peerId) => {
-        sendInit(myColor === 'white' ? 'black' : 'white', peerId);
-        startGame();
-    });
+        const link = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+        document.getElementById('roomLinkInput').value = link;
+        document.getElementById('yourColorDisplay').textContent =
+            myColor === 'white' ? 'Белые' : 'Чёрные';
+        showScreen('waiting');
+
+        room.onPeerJoin((peerId) => {
+            console.log('Игрок подключился:', peerId);
+            sendInit(myColor === 'white' ? 'black' : 'white', peerId);
+            startGame();
+        });
+    } catch (err) {
+        console.error('Ошибка при создании игры:', err);
+        alert('Ошибка: ' + err.message);
+    }
 });
 
-// === ПРИСОЕДИНЕНИЕ ===
 window.addEventListener('load', () => {
     const params = new URLSearchParams(window.location.search);
     const roomId = params.get('room');
 
     if (roomId) {
+        console.log('Присоединяемся к комнате:', roomId);
         isHost = false;
         showScreen('connecting');
-        room = joinRoom({ appId: APP_ID }, roomId);
-        setupActions();
+        
+        try {
+            room = joinRoom({ appId: APP_ID }, roomId);
+            setupActions();
+        } catch (err) {
+            console.error('Ошибка при присоединении:', err);
+            alert('Ошибка подключения: ' + err.message);
+        }
     }
 });
 
@@ -352,5 +381,4 @@ function addChatMessage(color, message) {
     const colorText = color === 'white' ? 'Белые' : 'Чёрные';
     el.innerHTML = `<span class="sender">${colorText}:</span> ${message}`;
     container.appendChild(el);
-    container.scrollTop = container.scrollHeight;
-}
+    container.scrollTop = 
