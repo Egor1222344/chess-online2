@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>♟️ Шахматы Онлайн</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-animation"></div>
+    
+    <div id="mainMenu" class="screen active">
+        <div class="menu-container">
+            <h1 class="title">
+                <span class="chess-icon">♔</span>
+                Шахматы Онлайн
+                <span class="chess-icon">♚</span>
+            </h1>
+            <p class="subtitle">Играй с другом в любой точке мира</p>
+            
+            <div class="menu-buttons">
+                <button id="createGameBtn" class="btn btn-primary">
+                    <span class="btn-icon">🎮</span>
+                    Создать игру
+                </button>
+            </div>
+            <p style="color:rgba(255,255,255,0.5); text-align:center; margin-top:20px; font-size:0.9rem;">
+                Чтобы присоединиться к другу — просто перейдите по ссылке, которую он отправит
+            </p>
+        </div>
+    </div>
+
+    <div id="waitingScreen" class="screen">
+        <div class="waiting-container">
+            <div class="spinner"></div>
+            <h2>Ожидание соперника...</h2>
+            <p>Отправьте эту ссылку другу:</p>
+            <div class="room-link-container">
+                <input type="text" id="roomLinkInput" readonly>
+                <button id="copyLinkBtn" class="btn btn-copy">📋 Копировать</button>
+            </div>
+            <div class="your-color">
+                Ваш цвет: <span id="yourColorDisplay"></span>
+            </div>
+        </div>
+    </div>
+
+    <div id="connectingScreen" class="screen">
+        <div class="waiting-container">
+            <div class="spinner"></div>
+            <h2>Подключение к игре...</h2>
+        </div>
+    </div>
+
+    <div id="gameScreen" class="screen">
+        <div class="game-container">
+            <div class="game-header">
+                <div class="player-info opponent">
+                    <span class="player-label">Соперник</span>
+                    <span id="opponentColor" class="color-indicator"></span>
+                </div>
+                <div class="game-status">
+                    <span id="gameStatus">Ход: белые</span>
+                </div>
+                <div class="player-info you">
+                    <span class="player-label">Вы</span>
+                    <span id="yourColor" class="color-indicator"></span>
+                </div>
+            </div>
+
+            <div class="game-content">
+                <div class="board-container">
+                    <div id="chessboard" class="chessboard"></div>
+                </div>
+
+                <div class="side-panel">
+                    <div class="controls">
+                        <button id="resignBtn" class="btn btn-danger">🏳️ Сдаться</button>
+                        <button id="rematchBtn" class="btn btn-secondary">🔄 Реванш</button>
+                    </div>
+
+                    <div class="move-history">
+                        <h3>История ходов</h3>
+                        <div id="movesList" class="moves-list"></div>
+                    </div>
+
+                    <div class="chat-container">
+                        <h3>Чат</h3>
+                        <div id="chatMessages" class="chat-messages"></div>
+                        <div class="chat-input-container">
+                            <input type="text" id="chatInput" placeholder="Напишите сообщение...">
+                            <button id="sendChatBtn">📤</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h2 id="gameOverTitle">Игра окончена</h2>
+            <p id="gameOverMessage"></p>
+            <div class="modal-buttons">
+                <button id="modalRematchBtn" class="btn btn-primary">🔄 Реванш</button>
+                <button id="modalHomeBtn" class="btn btn-secondary">🏠 Главное меню</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="promotionModal" class="modal">
+        <div class="modal-content promotion-content">
+            <h3>Выберите фигуру для превращения</h3>
+            <div class="promotion-pieces">
+                <div class="promotion-piece" data-piece="q">♕</div>
+                <div class="promotion-piece" data-piece="r">♖</div>
+                <div class="promotion-piece" data-piece="b">♗</div>
+                <div class="promotion-piece" data-piece="n">♘</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PeerJS: соединяет браузеры напрямую, регистрация НЕ нужна -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <!-- Chess.js: логика шахмат -->
+    <script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.min.js"></script>
+    
+    <script src="game.js"></script>
+</body>
+</html>
