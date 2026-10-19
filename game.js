@@ -20,10 +20,7 @@ if (typeof firebase === 'undefined' || typeof Chess === 'undefined') {
   setTimeout(() => debugEl.classList.add('hidden'), 1500);
 }
 
-const PIECES = {
-  'wp':'♙','wr':'♖','wn':'♘','wb':'♗','wq':'♕','wk':'♔',
-  'bp':'♟','br':'♜','bn':'♞','bb':'♝','bq':'♛','bk':'♚'
-};
+const PIECES = { 'wp':'♙','wr':'♖','wn':'♘','wb':'♗','wq':'♕','wk':'♔','bp':'♟','br':'♜','bn':'♞','bb':'♝','bq':'♛','bk':'♚' };
 const BAD_WORDS = ['fuck','shit','bitch','cunt','asshole','dick','pussy','nigger','nigga','faggot','fag','whore','slut','bastard','cock','rape','nazi','retard'];
 
 /* ---------- TRANSLATIONS ---------- */
@@ -38,13 +35,19 @@ const TRANSLATIONS = {
     languageLabel:'Язык', soundLabel:'Звук', statsTitle:'Статистика', winsLabel:'Побед', lossesLabel:'Поражений', drawsLabel:'Ничьих',
     matchHistoryTitle:'Последние партии', noHistory:'Пока нет игр', resetBtn:'🗑️ Сбросить профиль',
     leaderboardTitle:'🏆 Лидерборд', friendsTitle:'🤝 Друзья', addFriendPlaceholder:'Ник друга', addFriendBtn:'Добавить',
-    friendNotFound:'Игрок не найден', alreadyFriend:'Уже в друзьях', cantAddSelf:'Нельзя добавить самого себя', friendAdded:'Друг добавлен!',
-    noFriends:'У вас пока нет друзей', inviteBtn:'Пригласить', online:'в сети', offline:'не в сети',
+    friendNotFound:'Игрок не найден', alreadyFriend:'Уже в друзьях', cantAddSelf:'Нельзя добавить самого себя',
+    noFriends:'У вас пока нет друзей', online:'в сети', offline:'не в сети',
     learnTitle:'📖 Научиться играть', waitingTitle:'Ожидание соперника...', yourColorLabel:'Ваш цвет:', copyBtn:'📋 Копировать',
     hintJoin:'Отправьте эту ссылку другу', connectingTitle:'Подключение к игре...', resignBtn:'🏳️ Сдаться', rematchBtn:'🔄 Реванш',
     homeBtn:'🏠 На главную', chatPlaceholder:'Сообщение...', choosePiece:'Выберите фигуру', aiThinking:'ИИ думает...',
     accept:'Принять', decline:'Отклонить', inviteFrom:'приглашает вас сыграть!', you:'Вы', aiOpponent:'ИИ', white:'Белые', black:'Чёрные',
-    check:'Шах! Ход:', turn:'Ход:', checkmate:'Мат!', win:'Победили', draw:'Ничья', resigned:'победили (соперник сдался)', impossible:'Невозможный ход!'
+    check:'Шах! Ход:', turn:'Ход:', checkmate:'Мат!', win:'Победили', draw:'Ничья', resigned:'победили (соперник сдался)', impossible:'Невозможный ход!',
+    privacyLabel:'Кто может писать вам', privacyAll:'Все', privacyFriends:'Друзья', privacyNobody:'Никто',
+    shareProfileBtn:'🔗 Поделиться профилем', profileLinkCopied:'Скопировано!',
+    messageBtn:'✉️ Написать', addFriendBtnModal:'➕ Добавить в друзья', requestSentBtn:'⏳ Заявка отправлена', alreadyFriendsBtn:'Уже друзья',
+    cantMessagePrivacy:'Этот игрок ограничил сообщения', closeBtn:'Закрыть',
+    friendsTab:'Друзья', requestsTab:'Заявки', noRequests:'Нет новых заявок',
+    confirmAddFriendText:'Добавить в друзья:', friendRequestSentMsg:'Заявка в друзья отправлена!'
   },
   en: {
     registerTitle:'Create your profile', nicknameLabel:'Your nickname (English only)', nicknamePlaceholder:'e.g. ChessMaster99',
@@ -56,13 +59,19 @@ const TRANSLATIONS = {
     languageLabel:'Language', soundLabel:'Sound', statsTitle:'Statistics', winsLabel:'Wins', lossesLabel:'Losses', drawsLabel:'Draws',
     matchHistoryTitle:'Recent games', noHistory:'No games yet', resetBtn:'🗑️ Reset profile',
     leaderboardTitle:'🏆 Leaderboard', friendsTitle:'🤝 Friends', addFriendPlaceholder:"Friend's nickname", addFriendBtn:'Add',
-    friendNotFound:'Player not found', alreadyFriend:'Already friends', cantAddSelf:"Can't add yourself", friendAdded:'Friend added!',
-    noFriends:'No friends yet', inviteBtn:'Invite', online:'online', offline:'offline',
+    friendNotFound:'Player not found', alreadyFriend:'Already friends', cantAddSelf:"Can't add yourself",
+    noFriends:'No friends yet', online:'online', offline:'offline',
     learnTitle:'📖 Learn to Play', waitingTitle:'Waiting for opponent...', yourColorLabel:'Your color:', copyBtn:'📋 Copy',
     hintJoin:'Send this link to a friend', connectingTitle:'Connecting to game...', resignBtn:'🏳️ Resign', rematchBtn:'🔄 Rematch',
     homeBtn:'🏠 Home', chatPlaceholder:'Message...', choosePiece:'Choose a piece', aiThinking:'AI is thinking...',
     accept:'Accept', decline:'Decline', inviteFrom:'invites you to play!', you:'You', aiOpponent:'AI', white:'White', black:'Black',
-    check:'Check! Turn:', turn:'Turn:', checkmate:'Checkmate!', win:'Won', draw:'Draw', resigned:'won (opponent resigned)', impossible:'Invalid move!'
+    check:'Check! Turn:', turn:'Turn:', checkmate:'Checkmate!', win:'Won', draw:'Draw', resigned:'won (opponent resigned)', impossible:'Invalid move!',
+    privacyLabel:'Who can message you', privacyAll:'Everyone', privacyFriends:'Friends', privacyNobody:'Nobody',
+    shareProfileBtn:'🔗 Share profile', profileLinkCopied:'Copied!',
+    messageBtn:'✉️ Message', addFriendBtnModal:'➕ Add friend', requestSentBtn:'⏳ Request sent', alreadyFriendsBtn:'Already friends',
+    cantMessagePrivacy:'This player restricted messages', closeBtn:'Close',
+    friendsTab:'Friends', requestsTab:'Requests', noRequests:'No new requests',
+    confirmAddFriendText:'Add friend:', friendRequestSentMsg:'Friend request sent!'
   }
 };
 let currentLang = localStorage.getItem('chessLang') || 'ru';
@@ -70,28 +79,28 @@ function t(key) { return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang]
 
 const LEARN_CONTENT = {
   ru: [
-    {title:'♙ Пешка', text:'Ходит вперёд на 1 клетку (на старте можно на 2). Бьёт по диагонали на 1 клетку вперёд. При достижении последней линии превращается в любую фигуру (обычно ферзя). Особый ход — взятие на проходе.'},
-    {title:'♘ Конь', text:'Ходит буквой "Г": 2 клетки в одну сторону + 1 клетку в перпендикулярную. Единственная фигура, которая может перепрыгивать через другие фигуры.'},
-    {title:'♗ Слон', text:'Ходит по диагонали на любое количество клеток. Каждый слон всю игру остаётся на клетках одного цвета.'},
+    {title:'♙ Пешка', text:'Ходит вперёд на 1 клетку (на старте можно на 2). Бьёт по диагонали на 1 клетку вперёд. При достижении последней линии превращается в любую фигуру. Особый ход — взятие на проходе.'},
+    {title:'♘ Конь', text:'Ходит буквой "Г": 2 клетки в одну сторону + 1 перпендикулярно. Может перепрыгивать через другие фигуры.'},
+    {title:'♗ Слон', text:'Ходит по диагонали на любое количество клеток. Всегда остаётся на клетках одного цвета.'},
     {title:'♖ Ладья', text:'Ходит по горизонтали и вертикали на любое количество клеток.'},
-    {title:'♕ Ферзь', text:'Самая сильная фигура. Сочетает ходы ладьи и слона — по горизонтали, вертикали и диагонали на любое расстояние.'},
-    {title:'♔ Король', text:'Ходит на 1 клетку в любом направлении. Нельзя ставить под удар — под шах. Цель игры — поставить мат королю соперника.'},
-    {title:'🏰 Рокировка', text:'Особый ход короля и ладьи одновременно. Король делает 2 шага к ладье, ладья встаёт рядом с ним. Условия: ни король, ни ладья ранее не ходили, между ними пусто, король не под шахом и не проходит через битое поле.'},
-    {title:'👻 Взятие на проходе', text:'Если пешка соперника только что пошла сразу на 2 клетки и встала рядом с вашей пешкой — вы можете побить её так, будто она прошла только 1 клетку. Делается сразу следующим ходом.'},
-    {title:'♛ Превращение пешки', text:'Когда пешка доходит до последней горизонтали, она обязательно превращается в ферзя, ладью, слона или коня (по выбору игрока).'},
-    {title:'⚠️ Шах и мат', text:'Шах — король под ударом. Нужно срочно защититься. Мат — шах, от которого нет защиты — игра окончена. Пат — королю не угрожают, но нет ни одного хода — ничья.'}
+    {title:'♕ Ферзь', text:'Самая сильная фигура. Сочетает ходы ладьи и слона.'},
+    {title:'♔ Король', text:'Ходит на 1 клетку в любом направлении. Нельзя ставить под шах. Цель игры — мат королю соперника.'},
+    {title:'🏰 Рокировка', text:'Король делает 2 шага к ладье, ладья встаёт рядом. Условия: фигуры не ходили, между ними пусто, король не под шахом.'},
+    {title:'👻 Взятие на проходе', text:'Если пешка соперника пошла сразу на 2 клетки рядом с вашей — можно побить её следующим ходом, как будто она прошла 1 клетку.'},
+    {title:'♛ Превращение пешки', text:'На последней горизонтали пешка превращается в ферзя, ладью, слона или коня.'},
+    {title:'⚠️ Шах и мат', text:'Шах — король под ударом. Мат — шах без защиты, игра окончена. Пат — нет ходов без шаха — ничья.'}
   ],
   en: [
-    {title:'♙ Pawn', text:'Moves forward 1 square (2 on first move). Captures diagonally 1 square forward. Promotes to any piece upon reaching the last rank. Special move: en passant.'},
-    {title:'♘ Knight', text:'Moves in an "L" shape: 2 squares one way + 1 perpendicular. The only piece that can jump over others.'},
-    {title:'♗ Bishop', text:'Moves diagonally any number of squares. Each bishop stays on one color for the whole game.'},
-    {title:'♖ Rook', text:'Moves horizontally and vertically any number of squares.'},
-    {title:'♕ Queen', text:'The strongest piece. Combines rook and bishop moves — any direction, any distance.'},
-    {title:'♔ King', text:'Moves 1 square in any direction. Cannot move into check. Goal of the game is to checkmate the enemy king.'},
-    {title:'🏰 Castling', text:'Special move of king + rook together. King moves 2 squares toward the rook, rook jumps next to it. Requires: neither piece has moved, no pieces between them, king not in check and does not pass through an attacked square.'},
-    {title:'👻 En Passant', text:'If an enemy pawn just moved 2 squares and landed beside yours, you may capture it as if it moved only 1 square. Must be done immediately on the next move.'},
-    {title:'♛ Pawn Promotion', text:'When a pawn reaches the last rank, it must promote to a queen, rook, bishop, or knight.'},
-    {title:'⚠️ Check & Checkmate', text:'Check — king is under attack, must be defended immediately. Checkmate — check with no defense, game over. Stalemate — no legal moves but not in check — draw.'}
+    {title:'♙ Pawn', text:'Moves forward 1 square (2 on first move). Captures diagonally. Promotes upon reaching the last rank. Special move: en passant.'},
+    {title:'♘ Knight', text:'Moves in an "L" shape. The only piece that can jump over others.'},
+    {title:'♗ Bishop', text:'Moves diagonally any distance. Stays on one color for the whole game.'},
+    {title:'♖ Rook', text:'Moves horizontally and vertically any distance.'},
+    {title:'♕ Queen', text:'The strongest piece. Combines rook and bishop moves.'},
+    {title:'♔ King', text:'Moves 1 square any direction. Cannot move into check. Goal: checkmate the enemy king.'},
+    {title:'🏰 Castling', text:'King moves 2 squares toward rook, rook jumps next to it. Requires untouched pieces, empty path, king not in check.'},
+    {title:'👻 En Passant', text:'Capture an enemy pawn that just moved 2 squares beside yours, as if it moved only 1.'},
+    {title:'♛ Pawn Promotion', text:'A pawn reaching the last rank must promote to a queen, rook, bishop, or knight.'},
+    {title:'⚠️ Check & Checkmate', text:'Check — king under attack. Checkmate — no defense, game over. Stalemate — no legal moves, not in check — draw.'}
   ]
 };
 
@@ -102,6 +111,9 @@ let selectedSquare = null, pendingPromotion = null;
 let lastChatLength = 0, statsRecordedLocally = false;
 let isAiMode = false, aiDifficulty = 'easy';
 let pendingRoomId = null;
+let currentChatPeerId = null, directChatUnsub = null;
+let paTargetId = null, paTargetNickname = null;
+let pendingRequestsSnapshot = null;
 
 function getPlayerId() {
   let id = localStorage.getItem('chessPlayerId');
@@ -112,6 +124,7 @@ const playerId = getPlayerId();
 function getNickname() { return localStorage.getItem('chessNickname') || null; }
 function getSkill() { return localStorage.getItem('chessSkill') || 'beginner'; }
 function setAvatarLetter(el, name) { el.textContent = name ? name.trim().charAt(0).toUpperCase() : '?'; }
+function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
 const SKILL_LABELS = { none:'skillNever', beginner:'skillBeginner', intermediate:'skillIntermediate', advanced:'skillAdvanced' };
 
@@ -122,6 +135,7 @@ const screens = {
   settings: document.getElementById('settingsScreen'),
   leaderboard: document.getElementById('leaderboardScreen'),
   friends: document.getElementById('friendsScreen'),
+  directChat: document.getElementById('directChatScreen'),
   learn: document.getElementById('learnScreen'),
   aiSetup: document.getElementById('aiSetupScreen'),
   waiting: document.getElementById('waitingScreen'),
@@ -171,10 +185,8 @@ function playTone(freq, duration) {
   if (!soundEnabled) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = freq;
-    osc.type = 'sine';
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.frequency.value = freq; osc.type = 'sine';
     gain.gain.setValueAtTime(0.1, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
     osc.connect(gain); gain.connect(ctx.destination);
@@ -218,6 +230,7 @@ document.getElementById('regSubmitBtn').addEventListener('click', async () => {
   await db.collection('players').doc(playerId).set({
     nickname: name, nicknameLower: name.toLowerCase(), skillLevel: selectedSkill,
     wins:0, losses:0, draws:0, gamesPlayed:0, friends:[], history:[],
+    messagePrivacy: 'all',
     lastSeen: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge:true });
 
@@ -243,6 +256,7 @@ async function refreshStatsDisplay() {
     document.getElementById('statLosses').textContent = d.losses || 0;
     document.getElementById('statDraws').textContent = d.draws || 0;
     renderMatchHistory(d.history || []);
+    applyPrivacyButtons(d.messagePrivacy || 'all');
   }
 }
 function renderMatchHistory(list) {
@@ -252,7 +266,7 @@ function renderMatchHistory(list) {
   list.slice(-5).reverse().forEach(h => {
     const row = document.createElement('div');
     row.className = 'history-row';
-    row.innerHTML = `<span>${h.opponent || t('aiOpponent')}</span><span>${h.outcome}</span>`;
+    row.innerHTML = `<span>${escapeHtml(h.opponent || t('aiOpponent'))}</span><span>${h.outcome}</span>`;
     container.appendChild(row);
   });
 }
@@ -262,8 +276,31 @@ async function addToHistory(opponentName, outcomeText) {
   });
 }
 
+/* ---------- PRIVACY ---------- */
+function applyPrivacyButtons(privacy) {
+  document.getElementById('privacyAllBtn').classList.toggle('active', privacy === 'all');
+  document.getElementById('privacyFriendsBtn').classList.toggle('active', privacy === 'friends');
+  document.getElementById('privacyNobodyBtn').classList.toggle('active', privacy === 'nobody');
+}
+async function setPrivacy(value) {
+  await db.collection('players').doc(playerId).set({ messagePrivacy: value }, { merge: true });
+  applyPrivacyButtons(value);
+}
+document.getElementById('privacyAllBtn').addEventListener('click', () => setPrivacy('all'));
+document.getElementById('privacyFriendsBtn').addEventListener('click', () => setPrivacy('friends'));
+document.getElementById('privacyNobodyBtn').addEventListener('click', () => setPrivacy('nobody'));
+
+document.getElementById('shareProfileBtn').addEventListener('click', async () => {
+  const link = `${window.location.origin}${window.location.pathname}?addfriend=${encodeURIComponent(getNickname())}`;
+  try { await navigator.clipboard.writeText(link); } catch(e) { prompt('Copy link:', link); }
+  const btn = document.getElementById('shareProfileBtn');
+  const old = btn.textContent;
+  btn.textContent = '✅ ' + t('profileLinkCopied');
+  setTimeout(() => btn.textContent = old, 2000);
+});
+
 /* ---------- NAV ---------- */
-document.getElementById('navPlayFriendBtn').addEventListener('click', createGameAsHost);
+document.getElementById('navPlayFriendBtn').addEventListener('click', () => createGameAsHost(false));
 document.getElementById('navPlayAiBtn').addEventListener('click', () => showScreen('aiSetup'));
 document.getElementById('navFriendsBtn').addEventListener('click', openFriendsScreen);
 document.getElementById('navLeaderboardBtn').addEventListener('click', openLeaderboard);
@@ -274,6 +311,10 @@ document.getElementById('backFromLeaderboard').addEventListener('click', () => s
 document.getElementById('backFromFriends').addEventListener('click', () => showScreen('main'));
 document.getElementById('backFromLearn').addEventListener('click', () => showScreen('main'));
 document.getElementById('backFromAiSetup').addEventListener('click', () => showScreen('main'));
+document.getElementById('backFromDirectChat').addEventListener('click', () => {
+  if (directChatUnsub) { directChatUnsub(); directChatUnsub = null; }
+  showScreen('friends');
+});
 
 document.getElementById('saveNicknameBtn').addEventListener('click', async () => {
   const input = document.getElementById('nicknameInput');
@@ -321,20 +362,152 @@ async function openLeaderboard() {
     snapshot.forEach(doc => {
       const d = doc.data();
       const row = document.createElement('div');
-      row.className = 'leaderboard-row' + (doc.id === playerId ? ' me' : '');
+      row.className = 'leaderboard-row clickable' + (doc.id === playerId ? ' me' : '');
       row.innerHTML = `<span class="lb-rank">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank}</span>
         <span class="avatar">${d.nickname ? d.nickname.charAt(0).toUpperCase() : '?'}</span>
-        <span class="lb-name">${d.nickname || '?'}</span>
+        <span class="lb-name">${escapeHtml(d.nickname || '?')}</span>
         <span class="lb-stat">🏆${d.wins||0}</span><span class="lb-stat">💀${d.losses||0}</span><span class="lb-stat">🤝${d.draws||0}</span>`;
+      row.addEventListener('click', () => openPlayerActionModal(doc.id, d.nickname));
       container.appendChild(row);
       rank++;
     });
   } catch(e) { container.innerHTML = '<p class="hint">Error</p>'; }
 }
 
-/* ---------- FRIENDS ---------- */
+/* ---------- PLAYER ACTION MODAL ---------- */
+async function openPlayerActionModal(targetId, targetNickname) {
+  paTargetId = targetId; paTargetNickname = targetNickname;
+  document.getElementById('paAvatar').textContent = targetNickname.charAt(0).toUpperCase();
+  document.getElementById('paNickname').textContent = targetNickname;
+
+  const addBtn = document.getElementById('paAddFriendBtn');
+  const msgBtn = document.getElementById('paMessageBtn');
+
+  if (targetId === playerId) {
+    addBtn.style.display = 'none';
+    msgBtn.style.display = 'none';
+  } else {
+    addBtn.style.display = 'block';
+    msgBtn.style.display = 'block';
+    msgBtn.disabled = false;
+
+    const myDoc = await db.collection('players').doc(playerId).get();
+    const myFriends = (myDoc.exists && myDoc.data().friends) || [];
+    if (myFriends.includes(targetId)) {
+      addBtn.textContent = '✅ ' + t('alreadyFriendsBtn');
+      addBtn.disabled = true;
+    } else {
+      const existing = await db.collection('friendRequests')
+        .where('from','==',playerId).where('to','==',targetId).where('status','==','pending').limit(1).get();
+      if (!existing.empty) { addBtn.textContent = t('requestSentBtn'); addBtn.disabled = true; }
+      else { addBtn.textContent = t('addFriendBtnModal'); addBtn.disabled = false; }
+    }
+  }
+  document.getElementById('playerActionModal').classList.add('active');
+}
+document.getElementById('paCloseBtn').addEventListener('click', () => document.getElementById('playerActionModal').classList.remove('active'));
+document.getElementById('paAddFriendBtn').addEventListener('click', async () => {
+  await sendFriendRequest(paTargetId, paTargetNickname);
+  const btn = document.getElementById('paAddFriendBtn');
+  btn.textContent = t('requestSentBtn');
+  btn.disabled = true;
+});
+document.getElementById('paMessageBtn').addEventListener('click', async () => {
+  document.getElementById('playerActionModal').classList.remove('active');
+  await tryOpenMessage(paTargetId, paTargetNickname);
+});
+
+async function tryOpenMessage(targetId, targetNickname) {
+  const targetDoc = await db.collection('players').doc(targetId).get();
+  const privacy = (targetDoc.exists && targetDoc.data().messagePrivacy) || 'all';
+  const myDoc = await db.collection('players').doc(playerId).get();
+  const myFriends = (myDoc.exists && myDoc.data().friends) || [];
+  const isFriend = myFriends.includes(targetId);
+  if (privacy === 'nobody') { alert(t('cantMessagePrivacy')); return; }
+  if (privacy === 'friends' && !isFriend) { alert(t('cantMessagePrivacy')); return; }
+  openDirectChat(targetId, targetNickname);
+}
+
+/* ---------- FRIEND REQUESTS ---------- */
+async function sendFriendRequest(targetId, targetNickname) {
+  const existing = await db.collection('friendRequests')
+    .where('from','==',playerId).where('to','==',targetId).where('status','==','pending').limit(1).get();
+  if (!existing.empty) return 'pending';
+  await db.collection('friendRequests').add({
+    from: playerId, to: targetId, fromNickname: getNickname(),
+    status: 'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  return 'sent';
+}
+
+function listenForFriendRequests() {
+  db.collection('friendRequests').where('to','==',playerId).where('status','==','pending')
+    .onSnapshot(snapshot => {
+      pendingRequestsSnapshot = snapshot;
+      updateRequestsBadge(snapshot.size);
+      if (screens.friends.classList.contains('active') && document.getElementById('requestsPane').style.display !== 'none') {
+        renderRequestsList(snapshot);
+      }
+    });
+}
+function updateRequestsBadge(count) {
+  const navBadge = document.getElementById('navFriendsBadge');
+  const tabBadge = document.getElementById('requestsCountBadge');
+  if (count > 0) {
+    navBadge.style.display = 'inline-flex'; navBadge.textContent = count;
+    tabBadge.style.display = 'inline-flex'; tabBadge.textContent = count;
+  } else {
+    navBadge.style.display = 'none';
+    tabBadge.style.display = 'none';
+  }
+}
+function renderRequestsList(snapshot) {
+  const container = document.getElementById('requestsList');
+  if (snapshot.empty) { container.innerHTML = `<p class="hint">${t('noRequests')}</p>`; return; }
+  container.innerHTML = '';
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    const row = document.createElement('div');
+    row.className = 'leaderboard-row';
+    row.innerHTML = `<span class="avatar">${d.fromNickname.charAt(0).toUpperCase()}</span>
+      <span class="lb-name">${escapeHtml(d.fromNickname)}</span>
+      <div class="request-row-btns">
+        <button class="accept-req-btn">${t('accept')}</button>
+        <button class="decline-req-btn">${t('decline')}</button>
+      </div>`;
+    row.querySelector('.accept-req-btn').addEventListener('click', () => acceptFriendRequest(doc.id, d.from));
+    row.querySelector('.decline-req-btn').addEventListener('click', () => declineFriendRequest(doc.id));
+    container.appendChild(row);
+  });
+}
+async function acceptFriendRequest(reqId, fromId) {
+  await db.collection('friendRequests').doc(reqId).update({ status: 'accepted' });
+  await db.collection('players').doc(playerId).update({ friends: firebase.firestore.FieldValue.arrayUnion(fromId) });
+  await db.collection('players').doc(fromId).update({ friends: firebase.firestore.FieldValue.arrayUnion(playerId) });
+  renderFriendsList();
+}
+async function declineFriendRequest(reqId) {
+  await db.collection('friendRequests').doc(reqId).update({ status: 'declined' });
+}
+
+/* ---------- FRIENDS SCREEN ---------- */
+document.getElementById('friendsTabBtn').addEventListener('click', () => {
+  document.getElementById('friendsTabBtn').classList.add('active');
+  document.getElementById('requestsTabBtn').classList.remove('active');
+  document.getElementById('friendsPane').style.display = 'block';
+  document.getElementById('requestsPane').style.display = 'none';
+});
+document.getElementById('requestsTabBtn').addEventListener('click', () => {
+  document.getElementById('requestsTabBtn').classList.add('active');
+  document.getElementById('friendsTabBtn').classList.remove('active');
+  document.getElementById('friendsPane').style.display = 'none';
+  document.getElementById('requestsPane').style.display = 'block';
+  if (pendingRequestsSnapshot) renderRequestsList(pendingRequestsSnapshot);
+});
+
 async function openFriendsScreen() {
   showScreen('friends');
+  document.getElementById('friendsTabBtn').click();
   await renderFriendsList();
 }
 async function renderFriendsList() {
@@ -352,9 +525,13 @@ async function renderFriendsList() {
     const row = document.createElement('div');
     row.className = 'leaderboard-row';
     row.innerHTML = `<span class="avatar">${d.nickname.charAt(0).toUpperCase()}</span>
-      <span class="lb-name">${d.nickname} <span class="online-dot">${isOnline ? '🟢' : '⚪'}</span></span>
-      <button class="friend-invite-btn">${t('inviteBtn')}</button>`;
-    row.querySelector('.friend-invite-btn').addEventListener('click', () => inviteFriend(fid, d.nickname));
+      <span class="lb-name">${escapeHtml(d.nickname)} <span class="online-dot">${isOnline ? '🟢' : '⚪'}</span></span>
+      <div class="friend-row-btns">
+        <button class="chat-friend-btn">💬</button>
+        <button class="invite-friend-btn">🎮</button>
+      </div>`;
+    row.querySelector('.invite-friend-btn').addEventListener('click', () => inviteFriend(fid, d.nickname));
+    row.querySelector('.chat-friend-btn').addEventListener('click', () => openDirectChat(fid, d.nickname));
     container.appendChild(row);
   }
 }
@@ -374,13 +551,10 @@ document.getElementById('addFriendBtn').addEventListener('click', async () => {
   const myFriends = (myDoc.exists && myDoc.data().friends) || [];
   if (myFriends.includes(friendId)) { msg.textContent = t('alreadyFriend'); return; }
 
-  await db.collection('players').doc(playerId).update({ friends: firebase.firestore.FieldValue.arrayUnion(friendId) });
-  await db.collection('players').doc(friendId).update({ friends: firebase.firestore.FieldValue.arrayUnion(playerId) });
-
+  await sendFriendRequest(friendId, friendDoc.data().nickname);
   msg.style.color = 'var(--accent3)';
-  msg.textContent = t('friendAdded');
+  msg.textContent = t('friendRequestSentMsg');
   input.value = '';
-  renderFriendsList();
 });
 
 async function inviteFriend(friendId, friendNickname) {
@@ -395,9 +569,7 @@ async function inviteFriend(friendId, friendNickname) {
 function listenForInvites() {
   db.collection('invites').where('to', '==', playerId).where('status', '==', 'pending')
     .onSnapshot(snapshot => {
-      snapshot.docChanges().forEach(change => {
-        if (change.type === 'added') showInviteBanner(change.doc);
-      });
+      snapshot.docChanges().forEach(change => { if (change.type === 'added') showInviteBanner(change.doc); });
     });
 }
 function showInviteBanner(doc) {
@@ -419,6 +591,68 @@ function startLastSeenUpdater() {
   const update = () => db.collection('players').doc(playerId).update({ lastSeen: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
   update();
   setInterval(update, 30000);
+}
+
+/* ---------- DIRECT CHAT ---------- */
+function openDirectChat(targetId, targetNickname) {
+  currentChatPeerId = targetId;
+  document.getElementById('directChatTitle').textContent = targetNickname;
+  showScreen('directChat');
+
+  const chatId = [playerId, targetId].sort().join('_');
+  if (directChatUnsub) directChatUnsub();
+  directChatUnsub = db.collection('directChats').doc(chatId).onSnapshot(doc => {
+    const messages = (doc.exists && doc.data().messages) || [];
+    renderDirectChat(messages, targetNickname);
+  });
+}
+function renderDirectChat(messages, targetNickname) {
+  const container = document.getElementById('directChatMessages');
+  container.innerHTML = '';
+  messages.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'chat-message';
+    const who = m.from === playerId ? t('you') : targetNickname;
+    el.innerHTML = `<span class="sender">${escapeHtml(who)}:</span> ${escapeHtml(m.text)}`;
+    container.appendChild(el);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+document.getElementById('sendDirectChatBtn').addEventListener('click', sendDirectMessage);
+document.getElementById('directChatInput').addEventListener('keypress', e => { if (e.key === 'Enter') sendDirectMessage(); });
+function sendDirectMessage() {
+  const input = document.getElementById('directChatInput');
+  const text = input.value.trim();
+  if (!text || !currentChatPeerId) return;
+  const chatId = [playerId, currentChatPeerId].sort().join('_');
+  db.collection('directChats').doc(chatId).set({
+    participants: [playerId, currentChatPeerId],
+    messages: firebase.firestore.FieldValue.arrayUnion({ from: playerId, text, time: Date.now() })
+  }, { merge: true });
+  input.value = '';
+}
+
+/* ---------- ADD FRIEND VIA LINK ---------- */
+function checkAddFriendParam() {
+  const params = new URLSearchParams(window.location.search);
+  const friendNick = params.get('addfriend');
+  if (friendNick && friendNick.toLowerCase() !== (getNickname()||'').toLowerCase()) {
+    db.collection('players').where('nicknameLower','==',friendNick.toLowerCase()).limit(1).get().then(snapshot => {
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0];
+        document.getElementById('addFriendConfirmText').textContent = `${t('confirmAddFriendText')} ${doc.data().nickname}?`;
+        document.getElementById('addFriendConfirmModal').classList.add('active');
+        document.getElementById('confirmAddFriendBtn').onclick = async () => {
+          await sendFriendRequest(doc.id, doc.data().nickname);
+          document.getElementById('addFriendConfirmModal').classList.remove('active');
+          alert(t('friendRequestSentMsg'));
+        };
+        document.getElementById('cancelAddFriendBtn').onclick = () => {
+          document.getElementById('addFriendConfirmModal').classList.remove('active');
+        };
+      }
+    });
+  }
 }
 
 /* ---------- AI SETUP ---------- */
@@ -454,7 +688,6 @@ function startAiGame(difficulty) {
   if (myColor === 'black') setTimeout(makeAiMove, 500);
 }
 
-/* AI engine */
 function evaluateBoard(game) {
   const board = game.board();
   const values = { p:100, n:320, b:330, r:500, q:900, k:0 };
@@ -474,23 +707,11 @@ function minimax(game, depth, alpha, beta, maximizing) {
   const moves = game.moves();
   if (maximizing) {
     let best = -Infinity;
-    for (const m of moves) {
-      game.move(m);
-      best = Math.max(best, minimax(game, depth-1, alpha, beta, false));
-      game.undo();
-      alpha = Math.max(alpha, best);
-      if (beta <= alpha) break;
-    }
+    for (const m of moves) { game.move(m); best = Math.max(best, minimax(game, depth-1, alpha, beta, false)); game.undo(); alpha = Math.max(alpha, best); if (beta <= alpha) break; }
     return best;
   } else {
     let best = Infinity;
-    for (const m of moves) {
-      game.move(m);
-      best = Math.min(best, minimax(game, depth-1, alpha, beta, true));
-      game.undo();
-      beta = Math.min(beta, best);
-      if (beta <= alpha) break;
-    }
+    for (const m of moves) { game.move(m); best = Math.min(best, minimax(game, depth-1, alpha, beta, true)); game.undo(); beta = Math.min(beta, best); if (beta <= alpha) break; }
     return best;
   }
 }
@@ -512,18 +733,13 @@ function makeAiMove() {
   setTimeout(() => {
     let move;
     const moves = chess.moves();
-    if (aiDifficulty === 'easy') {
-      move = Math.random() < 0.55 ? moves[Math.floor(Math.random()*moves.length)] : getBestMove(chess, 1);
-    } else if (aiDifficulty === 'medium') {
-      move = getBestMove(chess, 2);
-    } else {
-      move = getBestMove(chess, 3);
-    }
+    if (aiDifficulty === 'easy') move = Math.random() < 0.55 ? moves[Math.floor(Math.random()*moves.length)] : getBestMove(chess, 1);
+    else if (aiDifficulty === 'medium') move = getBestMove(chess, 2);
+    else move = getBestMove(chess, 3);
     const moveObj = chess.move(move);
     finalizeLocalMove(moveObj);
   }, 350);
 }
-
 function finalizeLocalMove(moveObj) {
   renderBoard();
   updateStatus();
@@ -556,6 +772,7 @@ async function createGameAsHost(silent) {
     roomId = Math.random().toString(36).substr(2, 8);
     roomRef = db.collection('rooms').doc(roomId);
     const hostNickname = getNickname() || 'Player';
+    lastChatLength = 0;
 
     await roomRef.set({
       fen: new Chess().fen(), hostId: playerId, hostColor: myColor, hostNickname,
@@ -568,7 +785,7 @@ async function createGameAsHost(silent) {
     document.getElementById('chatBox').style.display = 'flex';
 
     const link = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
-    if (!silent) {
+    if (silent !== true) {
       document.getElementById('roomLinkInput').value = link;
       document.getElementById('yourColorDisplay').textContent = myColor === 'white' ? t('white') : t('black');
       showScreen('waiting');
@@ -589,6 +806,7 @@ async function joinRoomFlow(rid) {
   roomRef = db.collection('rooms').doc(roomId);
   isAiMode = false;
   isHost = false;
+  lastChatLength = 0;
   showScreen('connecting');
   document.getElementById('chatBox').style.display = 'flex';
 
@@ -599,9 +817,7 @@ async function joinRoomFlow(rid) {
     myColor = data.hostColor === 'white' ? 'black' : 'white';
     const guestNickname = getNickname() || 'Player';
 
-    if (!data.guestJoined) {
-      await roomRef.update({ guestId: playerId, guestNickname, guestJoined: true });
-    }
+    if (!data.guestJoined) await roomRef.update({ guestId: playerId, guestNickname, guestJoined: true });
     chess = new Chess();
     listenToRoom();
   } catch (err) {
@@ -656,9 +872,7 @@ async function updatePlayerStats(pid, field) {
   if (!pid) return;
   const ref = db.collection('players').doc(pid);
   const doc = await ref.get();
-  if (doc.exists) {
-    await ref.update({ [field]: firebase.firestore.FieldValue.increment(1), gamesPlayed: firebase.firestore.FieldValue.increment(1) });
-  }
+  if (doc.exists) await ref.update({ [field]: firebase.firestore.FieldValue.increment(1), gamesPlayed: firebase.firestore.FieldValue.increment(1) });
 }
 async function recordResult(result, data) {
   if (!result || !result.winner) return;
@@ -709,6 +923,17 @@ function renderBoard() {
       else { for (let i = 0; i < parseInt(char); i++) { board.appendChild(createSquare(r, fileIdx, null, isFlipped)); fileIdx++; } }
     }
   }
+  renderCoordinates(isFlipped);
+}
+function renderCoordinates(isFlipped) {
+  const rankLabels = document.getElementById('rankLabels');
+  const fileLabels = document.getElementById('fileLabels');
+  rankLabels.innerHTML = '';
+  fileLabels.innerHTML = '';
+  const ranks = isFlipped ? [1,2,3,4,5,6,7,8] : [8,7,6,5,4,3,2,1];
+  const files = isFlipped ? ['h','g','f','e','d','c','b','a'] : ['a','b','c','d','e','f','g','h'];
+  ranks.forEach(r => { const s = document.createElement('span'); s.textContent = r; rankLabels.appendChild(s); });
+  files.forEach(f => { const s = document.createElement('span'); s.textContent = f; fileLabels.appendChild(s); });
 }
 function createSquare(rankIdx, fileIdx, piece, isFlipped) {
   const square = document.createElement('div');
@@ -805,10 +1030,7 @@ function doMove(from, to, promotion = 'q') {
       setTimeout(makeAiMove, 400);
     }
   } else {
-    roomRef.update({
-      fen: chess.fen(), lastMove: { from, to },
-      moveHistory: firebase.firestore.FieldValue.arrayUnion(move.san), result: result
-    });
+    roomRef.update({ fen: chess.fen(), lastMove: { from, to }, moveHistory: firebase.firestore.FieldValue.arrayUnion(move.san), result: result });
     if (result) { soundGameOver(); showGameOver(result.text); }
   }
 }
@@ -896,7 +1118,7 @@ function renderChat(list) {
     const el = document.createElement('div');
     el.className = 'chat-message';
     const name = msg.nickname || (msg.color === 'white' ? t('white') : t('black'));
-    el.innerHTML = `<span class="sender">${name}:</span> ${msg.message}`;
+    el.innerHTML = `<span class="sender">${escapeHtml(name)}:</span> ${escapeHtml(msg.message)}`;
     container.appendChild(el);
   });
   container.scrollTop = container.scrollHeight;
@@ -909,7 +1131,9 @@ function afterAuth() {
   applyTheme(localStorage.getItem('chessTheme') || 'dark');
   updateSoundBtn();
   listenForInvites();
+  listenForFriendRequests();
   startLastSeenUpdater();
+  checkAddFriendParam();
 
   if (pendingRoomId) joinRoomFlow(pendingRoomId);
   else showScreen('main');
@@ -923,9 +1147,6 @@ window.addEventListener('load', () => {
   applyLanguage(currentLang);
   updateSoundBtn();
 
-  if (!getNickname()) {
-    showScreen('register');
-  } else {
-    afterAuth();
-  }
+  if (!getNickname()) showScreen('register');
+  else afterAuth();
 });
