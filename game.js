@@ -1,6 +1,4 @@
 console.log('✅ game.js загружен');
-console.log('Chess доступен:', typeof Chess !== 'undefined');
-console.log('Firebase доступен:', typeof firebase !== 'undefined');
 
 const firebaseConfig = {
   apiKey: "AIzaSyBd5v7EObJ9IZjD96HSnEnJJ_-A9t53sQ",
@@ -22,6 +20,7 @@ if (typeof firebase === 'undefined') {
   debugEl.textContent = '⚠️ Ошибка: библиотека chess.js не загрузилась';
 } else {
   debugEl.textContent = '✅ Firebase подключен';
+  setTimeout(() => debugEl.classList.add('hidden'), 2000);
 }
 
 const PIECES = {
@@ -37,6 +36,7 @@ let chess = new Chess();
 let selectedSquare = null;
 let pendingPromotion = null;
 let lastChatLength = 0;
+let statsRecordedLocally = false;
 
 function getPlayerId() {
     let id = localStorage.getItem('chessPlayerId');
@@ -48,8 +48,130 @@ function getPlayerId() {
 }
 const playerId = getPlayerId();
 
+function getNickname() {
+    return localStorage.getItem('chessNickname') || null;
+}
+
+function setAvatarLetter(el, name) {
+    el.textContent = name ? name.trim().charAt(0).toUpperCase() : '?';
+}
+
+async function ensureProfile() {
+    const ref = db.collection('players').doc(playerId);
+    const doc = await ref.get();
+    let nickname = getNickname();
+
+    if (!doc.exists) {
+        if (!nickname) {
+            nickname = 'Игрок' + Math.floor(Math.random() * 9000 + 1000);
+            localStorage.setItem('chessNickname', nickname);
+        }
+        await ref.set({ nickname, wins: 0, losses: 0, draws: 0, gamesPlayed: 0 });
+    } else {
+        const data = doc.data();
+        if (!nickname) {
+            nickname = data.nickname;
+            localStorage.setItem('chessNickname', nickname);
+        } else if (nickname !== data.nickname) {
+            await ref.update({ nickname });
+        }
+    }
+
+    document.getElementById('currentNickname').textContent = nickname;
+    setAvatarLetter(document.getElementById('avatarInitial'), nickname);
+    document.getElementById('nicknameInput').value = nickname;
+    setAvatarLetter(document.getElementById('settingsAvatarPreview'), nickname);
+
+    refreshStatsDisplay();
+}
+
+async function refreshStatsDisplay() {
+    const ref = db.collection('players').doc(playerId);
+    const doc = await ref.get();
+    if (doc.exists) {
+        const d = doc.data();
+        document.getElementById('statWins').textContent = d.wins || 0;
+        document.getElementById('statLosses').textContent = d.losses || 0;
+        document.getElementById('statDraws').textContent = d.draws || 0;
+    }
+}
+
+ensureProfile();
+
+document.getElementById('openSettingsBtn').addEventListener('click', () => {
+    refreshStatsDisplay();
+    showScreen('settings');
+});
+document.getElementById('backFromSettings').addEventListener('click', () => showScreen('main'));
+
+document.getElementById('saveNicknameBtn').addEventListener('click', async () => {
+    const input = document.getElementById('nicknameInput');
+    let name = input.value.trim();
+    if (!name) { alert('Введите ник!'); return; }
+    if (name.length > 16) name = name.slice(0, 16);
+
+    localStorage.setItem('chessNickname', name);
+    const ref = db.collection('players').doc(playerId);
+    const doc = await ref.get();
+    if (doc.exists) {
+        await ref.update({ nickname: name });
+    } else {
+        await ref.set({ nickname: name, wins: 0, losses: 0, draws: 0, gamesPlayed: 0 });
+    }
+    document.getElementById('currentNickname').textContent = name;
+    setAvatarLetter(document.getElementById('avatarInitial'), name);
+    setAvatarLetter(document.getElementById('settingsAvatarPreview'), name);
+
+    const btn = document.getElementById('saveNicknameBtn');
+    btn.textContent = '✅ Сохранено!';
+    setTimeout(() => btn.textContent = '💾 Сохранить', 1500);
+});
+
+document.getElementById('openLeaderboardBtn').addEventListener('click', async () => {
+    showScreen('leaderboard');
+    const container = document.getElementById('leaderboardList');
+    container.innerHTML = '<p class="hint">Загрузка...</p>';
+
+    try {
+        const snapshot = await db.collection('players')
+            .orderBy('wins', 'desc')
+            .limit(20)
+            .get();
+
+        if (snapshot.empty) {
+            container.innerHTML = '<p class="hint">Пока нет данных. Сыграйте первую игру!</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        let rank = 1;
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            const row = document.createElement('div');
+            row.className = 'leaderboard-row';
+            if (doc.id === playerId) row.classList.add('me');
+            row.innerHTML = `
+                <span class="lb-rank">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}</span>
+                <span class="avatar">${d.nickname ? d.nickname.charAt(0).toUpperCase() : '?'}</span>
+                <span class="lb-name">${d.nickname || 'Игрок'}</span>
+                <span class="lb-stat">🏆 ${d.wins || 0}</span>
+                <span class="lb-stat">💀 ${d.losses || 0}</span>
+                <span class="lb-stat">🤝 ${d.draws || 0}</span>
+            `;
+            container.appendChild(row);
+            rank++;
+        });
+    } catch (err) {
+        console.error('Ошибка загрузки лидерборда:', err);
+        container.innerHTML = '<p class="hint">Не удалось загрузить лидерборд</p>';
+    }
+});
+document.getElementById('backFromLeaderboard').addEventListener('click', () => showScreen('main'));
+
 const screens = {
     main: document.getElementById('mainMenu'),
+    settings: document.getElementById('settingsScreen'),
+    leaderboard: document.getElementById('leaderboardScreen'),
     waiting: document.getElementById('waitingScreen'),
     connecting: document.getElementById('connectingScreen'),
     game: document.getElementById('gameScreen')
@@ -67,16 +189,20 @@ document.getElementById('createGameBtn').addEventListener('click', async () => {
         myColor = Math.random() < 0.5 ? 'white' : 'black';
         roomId = Math.random().toString(36).substr(2, 8);
         roomRef = db.collection('rooms').doc(roomId);
+        const hostNickname = getNickname() || 'Игрок';
 
         await roomRef.set({
             fen: chess.fen(),
             hostId: playerId,
             hostColor: myColor,
+            hostNickname,
             guestId: null,
+            guestNickname: null,
             guestJoined: false,
             moveHistory: [],
             lastMove: null,
             result: null,
+            statsRecorded: false,
             chat: [],
             rematchVotes: []
         });
@@ -117,10 +243,12 @@ window.addEventListener('load', async () => {
 
             const data = doc.data();
             myColor = data.hostColor === 'white' ? 'black' : 'white';
+            const guestNickname = getNickname() || 'Игрок';
 
             if (!data.guestJoined) {
                 await roomRef.update({
                     guestId: playerId,
+                    guestNickname,
                     guestJoined: true
                 });
             }
@@ -142,10 +270,10 @@ function listenToRoom() {
         const gameIsActive = screens.game.classList.contains('active');
 
         if (isHost && data.guestJoined && !gameIsActive) {
-            startGame();
+            startGame(data);
         }
         if (!isHost && !gameIsActive) {
-            startGame();
+            startGame(data);
         }
 
         if (data.fen && data.fen !== chess.fen()) {
@@ -165,17 +293,25 @@ function listenToRoom() {
         renderChat(data.chat || []);
 
         if (data.result) {
-            showGameOver(data.result);
+            showGameOver(data.result.text);
+
+            if (isHost && !data.statsRecorded && !statsRecordedLocally) {
+                statsRecordedLocally = true;
+                recordResult(data.result, data);
+                roomRef.update({ statsRecorded: true });
+            }
         }
 
         if (data.rematchVotes && data.rematchVotes.length >= 2) {
             chess = new Chess();
+            statsRecordedLocally = false;
             document.getElementById('gameOverModal').classList.remove('active');
             roomRef.update({
                 fen: chess.fen(),
                 moveHistory: [],
                 lastMove: null,
                 result: null,
+                statsRecorded: false,
                 rematchVotes: []
             });
         }
@@ -184,13 +320,54 @@ function listenToRoom() {
     });
 }
 
-function startGame() {
+async function updatePlayerStats(pid, field) {
+    if (!pid) return;
+    const ref = db.collection('players').doc(pid);
+    const doc = await ref.get();
+    if (doc.exists) {
+        await ref.update({
+            [field]: firebase.firestore.FieldValue.increment(1),
+            gamesPlayed: firebase.firestore.FieldValue.increment(1)
+        });
+    } else {
+        await ref.set({
+            nickname: 'Игрок',
+            wins: field === 'wins' ? 1 : 0,
+            losses: field === 'losses' ? 1 : 0,
+            draws: field === 'draws' ? 1 : 0,
+            gamesPlayed: 1
+        });
+    }
+}
+
+async function recordResult(result, data) {
+    if (!result || !result.winner) return;
+    if (result.winner === 'draw') {
+        await updatePlayerStats(data.hostId, 'draws');
+        await updatePlayerStats(data.guestId, 'draws');
+    } else {
+        const winnerId = result.winner === data.hostColor ? data.hostId : data.guestId;
+        const loserId = result.winner === data.hostColor ? data.guestId : data.hostId;
+        await updatePlayerStats(winnerId, 'wins');
+        await updatePlayerStats(loserId, 'losses');
+    }
+    refreshStatsDisplay();
+}
+
+function startGame(data) {
+    const yourNick = myColor === data.hostColor ? data.hostNickname : data.guestNickname;
+    const oppColor = myColor === 'white' ? 'black' : 'white';
+    const oppNick = myColor === data.hostColor ? data.guestNickname : data.hostNickname;
+
+    document.getElementById('yourNickname').textContent = yourNick || 'Вы';
     document.getElementById('yourColor').textContent = myColor === 'white' ? 'Белые' : 'Чёрные';
     document.getElementById('yourColor').className = `color-indicator ${myColor}`;
+    setAvatarLetter(document.getElementById('yourAvatar'), yourNick);
 
-    const oppColor = myColor === 'white' ? 'black' : 'white';
+    document.getElementById('opponentNickname').textContent = oppNick || 'Соперник';
     document.getElementById('opponentColor').textContent = oppColor === 'white' ? 'Белые' : 'Чёрные';
     document.getElementById('opponentColor').className = `color-indicator ${oppColor}`;
+    setAvatarLetter(document.getElementById('oppAvatar'), oppNick);
 
     showScreen('game');
     renderBoard();
@@ -257,6 +434,7 @@ function handleSquareClick(squareId) {
         if (piece && isPieceMine(piece)) {
             selectedSquare = squareId;
             highlightSquare(squareId, 'selected');
+            showMoveHints(squareId);
         }
     } else {
         if (selectedSquare === squareId) {
@@ -268,10 +446,19 @@ function handleSquareClick(squareId) {
             clearHighlights();
             selectedSquare = squareId;
             highlightSquare(squareId, 'selected');
+            showMoveHints(squareId);
         } else {
             attemptMove(selectedSquare, squareId);
         }
     }
+}
+
+function showMoveHints(squareId) {
+    const moves = chess.moves({ square: squareId, verbose: true });
+    moves.forEach(m => {
+        const isCapture = m.flags.includes('c') || m.flags.includes('e');
+        highlightSquare(m.to, isCapture ? 'capture-hint' : 'move-hint');
+    });
 }
 
 function isPieceMine(piece) {
@@ -320,10 +507,11 @@ function doMove(from, to, promotion = 'q') {
 
     let result = null;
     if (chess.in_checkmate()) {
-        const winner = move.color === 'w' ? 'Белые' : 'Чёрные';
-        result = `Мат! Победили: ${winner}`;
+        const winnerColor = move.color === 'w' ? 'white' : 'black';
+        const winnerText = move.color === 'w' ? 'Белые' : 'Чёрные';
+        result = { text: `Мат! Победили: ${winnerText}`, winner: winnerColor };
     } else if (chess.in_draw()) {
-        result = 'Ничья';
+        result = { text: 'Ничья', winner: 'draw' };
     }
 
     renderBoard();
@@ -342,7 +530,7 @@ function doMove(from, to, promotion = 'q') {
     });
 
     if (result) {
-        showGameOver(result);
+        showGameOver(result.text);
     }
 }
 
@@ -363,10 +551,10 @@ function updateStatus() {
 function renderMoveHistory(list) {
     const container = document.getElementById('movesList');
     container.innerHTML = '';
-    list.forEach(san => {
+    list.forEach((san, i) => {
         const item = document.createElement('div');
         item.className = 'move-item';
-        item.textContent = san;
+        item.textContent = `${i + 1}. ${san}`;
         container.appendChild(item);
     });
     container.scrollTop = container.scrollHeight;
@@ -379,7 +567,7 @@ function highlightSquare(squareId, className) {
 
 function clearHighlights() {
     document.querySelectorAll('.square').forEach(sq => {
-        sq.classList.remove('selected', 'last-move', 'check');
+        sq.classList.remove('selected', 'last-move', 'check', 'move-hint', 'capture-hint');
     });
 }
 
@@ -394,14 +582,15 @@ document.getElementById('copyLinkBtn').addEventListener('click', () => {
 
 document.getElementById('resignBtn').addEventListener('click', () => {
     if (!confirm('Сдаться?')) return;
-    const winner = myColor === 'white' ? 'Чёрные' : 'Белые';
-    const result = `${winner} победили (соперник сдался)`;
+    const winnerColor = myColor === 'white' ? 'black' : 'white';
+    const winnerText = myColor === 'white' ? 'Чёрные' : 'Белые';
+    const result = { text: `${winnerText} победили (соперник сдался)`, winner: winnerColor };
     roomRef.update({ result });
-    showGameOver(result);
+    showGameOver(result.text);
 });
 
-function showGameOver(result) {
-    document.getElementById('gameOverMessage').textContent = result;
+function showGameOver(text) {
+    document.getElementById('gameOverMessage').textContent = text;
     document.getElementById('gameOverModal').classList.add('active');
 }
 
@@ -430,7 +619,11 @@ function sendChatMessage() {
     if (!message) return;
 
     roomRef.update({
-        chat: firebase.firestore.FieldValue.arrayUnion({ color: myColor, message })
+        chat: firebase.firestore.FieldValue.arrayUnion({
+            color: myColor,
+            nickname: getNickname(),
+            message
+        })
     });
     input.value = '';
 }
@@ -443,8 +636,8 @@ function renderChat(list) {
     list.forEach(msg => {
         const el = document.createElement('div');
         el.className = 'chat-message';
-        const colorText = msg.color === 'white' ? 'Белые' : 'Чёрные';
-        el.innerHTML = `<span class="sender">${colorText}:</span> ${msg.message}`;
+        const name = msg.nickname || (msg.color === 'white' ? 'Белые' : 'Чёрные');
+        el.innerHTML = `<span class="sender">${name}:</span> ${msg.message}`;
         container.appendChild(el);
     });
     container.scrollTop = container.scrollHeight;
