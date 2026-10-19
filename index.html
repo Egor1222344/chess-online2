@@ -25,9 +25,6 @@
                     Создать игру
                 </button>
             </div>
-            <p style="color:rgba(255,255,255,0.5); text-align:center; margin-top:20px; font-size:0.9rem;">
-                Чтобы присоединиться к другу — просто перейдите по ссылке, которую он отправит
-            </p>
             <p id="debugInfo" style="color:#ffd700; text-align:center; margin-top:10px; font-size:0.8rem;"></p>
         </div>
     </div>
@@ -44,13 +41,6 @@
             <div class="your-color">
                 Ваш цвет: <span id="yourColorDisplay"></span>
             </div>
-        </div>
-    </div>
-
-    <div id="connectingScreen" class="screen">
-        <div class="waiting-container">
-            <div class="spinner"></div>
-            <h2>Подключение к игре...</h2>
         </div>
     </div>
 
@@ -122,13 +112,10 @@
         </div>
     </div>
 
-    <!-- Chess.js: логика шахматных правил (обычный скрипт, создаёт глобальный Chess) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.min.js"></script>
     
-    <!-- Trystero: P2P соединение (обычный скрипт, создаёт глобальный trystero) -->
-    <script src="https://cdn.jsdelivr.net/npm/trystero@0.20.1/dist/trystero-torrent.min.js"></script>
-    
-    <!-- Наш главный скрипт -->
     <script src="game.js"></script>
 </body>
 </html>
