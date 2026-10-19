@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Шахматы Онлайн</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,19 +14,65 @@
 
 <div class="container">
 
+  <!-- MAIN MENU -->
   <div id="mainMenu" class="screen active">
-    <div class="card">
+    <div class="card card-main">
+      <div class="top-icons">
+        <button class="icon-btn" id="openSettingsBtn" title="Настройки">⚙️</button>
+        <button class="icon-btn" id="openLeaderboardBtn" title="Лидерборд">🏆</button>
+      </div>
+
       <div class="title-row">
         <span class="crown">♚</span>
         <h1>Шахматы<br>Онлайн</h1>
         <span class="crown">♔</span>
       </div>
       <p class="subtitle">Играй с другом в любой точке мира</p>
+
+      <div class="profile-chip">
+        <span class="avatar" id="avatarInitial">?</span>
+        <span id="currentNickname">Игрок</span>
+      </div>
+
       <button id="createGameBtn" class="btn-main">🎮 Создать игру</button>
       <p class="hint">Чтобы присоединиться к другу — просто перейдите по ссылке, которую он отправит</p>
     </div>
   </div>
 
+  <!-- SETTINGS -->
+  <div id="settingsScreen" class="screen">
+    <div class="card">
+      <button class="back-btn" id="backFromSettings">← Назад</button>
+      <h2>Настройки аккаунта</h2>
+      <div class="settings-avatar">
+        <span class="avatar avatar-lg" id="settingsAvatarPreview">?</span>
+      </div>
+      <label class="field-label">Ваш ник</label>
+      <input type="text" id="nicknameInput" maxlength="16" placeholder="Введите ник">
+      <button id="saveNicknameBtn" class="btn-main">💾 Сохранить</button>
+      <div class="stats-box">
+        <h3>Ваша статистика</h3>
+        <div class="stats-row">
+          <div class="stat"><span class="stat-value" id="statWins">0</span><span class="stat-label">Побед</span></div>
+          <div class="stat"><span class="stat-value" id="statLosses">0</span><span class="stat-label">Поражений</span></div>
+          <div class="stat"><span class="stat-value" id="statDraws">0</span><span class="stat-label">Ничьих</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div id="leaderboardScreen" class="screen">
+    <div class="card card-wide">
+      <button class="back-btn" id="backFromLeaderboard">← Назад</button>
+      <h2>🏆 Лидерборд</h2>
+      <div id="leaderboardList" class="leaderboard-list">
+        <p class="hint">Загрузка...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAITING -->
   <div id="waitingScreen" class="screen">
     <div class="card">
       <h2>Ожидание соперника...</h2>
@@ -40,6 +86,7 @@
     </div>
   </div>
 
+  <!-- CONNECTING -->
   <div id="connectingScreen" class="screen">
     <div class="card">
       <h2>Подключение к игре...</h2>
@@ -47,23 +94,32 @@
     </div>
   </div>
 
+  <!-- GAME -->
   <div id="gameScreen" class="screen">
     <div class="game-layout">
       <div class="side-panel">
         <div class="player-info">
-          <span>Вы:</span>
-          <span id="yourColor" class="color-indicator"></span>
+          <span class="avatar" id="yourAvatar">?</span>
+          <div class="player-text">
+            <span id="yourNickname">Вы</span>
+            <span id="yourColor" class="color-indicator"></span>
+          </div>
         </div>
         <div class="player-info">
-          <span>Соперник:</span>
-          <span id="opponentColor" class="color-indicator"></span>
+          <span class="avatar" id="oppAvatar">?</span>
+          <div class="player-text">
+            <span id="opponentNickname">Соперник</span>
+            <span id="opponentColor" class="color-indicator"></span>
+          </div>
         </div>
         <p id="gameStatus" class="status"></p>
 
         <div id="movesList" class="moves-list"></div>
 
-        <button id="resignBtn" class="btn-secondary">🏳️ Сдаться</button>
-        <button id="rematchBtn" class="btn-secondary">🔄 Реванш</button>
+        <div class="btn-row">
+          <button id="resignBtn" class="btn-secondary">🏳️ Сдаться</button>
+          <button id="rematchBtn" class="btn-secondary">🔄 Реванш</button>
+        </div>
 
         <div class="chat-box">
           <div id="chatMessages" class="chat-messages"></div>
