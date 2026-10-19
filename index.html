@@ -2,334 +2,309 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chess Online</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>ChessFriends</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="debugInfo" class="debug-bar"></div>
-<div id="inviteBanner" class="invite-banner">
-  <span id="inviteText"></span>
-  <div class="invite-banner-btns">
-    <button id="acceptInviteBtn" data-i18n="accept">Принять</button>
-    <button id="declineInviteBtn" data-i18n="decline">Отклонить</button>
-  </div>
-</div>
+<div id="toast" class="toast hidden"></div>
 
-<div class="container">
+<!-- РЕГИСТРАЦИЯ -->
+<section id="screen-register" class="screen">
+  <div class="card reg-card">
+    <h1 class="logo">♞ ChessFriends</h1>
 
-  <!-- REGISTER -->
-  <div id="registerScreen" class="screen">
-    <div class="card">
-      <h1 class="brand">♞ CHESS<span>ONLINE</span></h1>
-      <h2 data-i18n="registerTitle">Создай профиль</h2>
+    <div class="reg-step active" data-step="login">
+      <h2 data-t="reg_login_title">Придумай логин</h2>
+      <p class="hint" data-t="reg_login_hint">Только латинские буквы, цифры и _. От 3 до 16 символов. По нему тебя будут находить друзья.</p>
+      <input id="regLoginInput" type="text" maxlength="16" placeholder="example_123" autocomplete="off">
+      <p class="error-text" id="regLoginError"></p>
+      <button class="btn btn-primary" id="regLoginNext" data-t="btn_next">Далее</button>
+    </div>
 
-      <label class="field-label" data-i18n="nicknameLabel">Твой никнейм (на английском)</label>
-      <input type="text" id="regNicknameInput" data-i18n-ph="nicknamePlaceholder" placeholder="например: ChessMaster99">
-      <p id="regNicknameError" class="error-text"></p>
+    <div class="reg-step" data-step="name">
+      <h2 data-t="reg_name_title">Как тебя зовут?</h2>
+      <p class="hint" data-t="reg_name_hint">Это имя увидят другие игроки. Можно на любом языке.</p>
+      <input id="regNameInput" type="text" maxlength="20" placeholder="Егор" autocomplete="off">
+      <p class="error-text" id="regNameError"></p>
+      <div class="row-gap">
+        <button class="btn btn-secondary" id="regNameBack" data-t="btn_back">Назад</button>
+        <button class="btn btn-primary" id="regNameNext" data-t="btn_next">Далее</button>
+      </div>
+    </div>
 
-      <label class="field-label" data-i18n="skillLabel">Твой уровень игры</label>
+    <div class="reg-step" data-step="skill">
+      <h2 data-t="reg_skill_title">Твой уровень игры</h2>
+      <p class="hint" data-t="reg_skill_hint">Это нужно для подбора соперника и советов</p>
       <div class="skill-grid">
-        <div class="skill-option" data-skill="none">
-          <span class="skill-emoji">🐣</span>
-          <span class="skill-name" data-i18n="skillNever">Вообще не умею</span>
-        </div>
-        <div class="skill-option" data-skill="beginner">
+        <div class="skill-card" data-skill="none">
           <span class="skill-emoji">🌱</span>
-          <span class="skill-name" data-i18n="skillBeginner">Новичок</span>
+          <b data-t="skill_none">Вообще не умею</b>
         </div>
-        <div class="skill-option" data-skill="intermediate">
-          <span class="skill-emoji">⚔️</span>
-          <span class="skill-name" data-i18n="skillIntermediate">Средний</span>
+        <div class="skill-card" data-skill="beginner">
+          <span class="skill-emoji">♟️</span>
+          <b data-t="skill_beginner">Новичок</b>
         </div>
-        <div class="skill-option" data-skill="advanced">
-          <span class="skill-emoji">👑</span>
-          <span class="skill-name" data-i18n="skillAdvanced">Продвинутый</span>
+        <div class="skill-card" data-skill="intermediate">
+          <span class="skill-emoji">♝</span>
+          <b data-t="skill_intermediate">Средний</b>
         </div>
-      </div>
-
-      <button id="regSubmitBtn" class="btn-main" data-i18n="registerBtn">Начать игру</button>
-    </div>
-  </div>
-
-  <!-- MAIN MENU -->
-  <div id="mainMenu" class="screen">
-    <div class="card">
-      <h1 class="brand">♞ CHESS<span>ONLINE</span></h1>
-
-      <div class="profile-row">
-        <span class="avatar" id="mainAvatar">?</span>
-        <div class="profile-text">
-          <strong id="mainNickname">Игрок</strong>
-          <span class="badge" id="mainSkillBadge">—</span>
+        <div class="skill-card" data-skill="advanced">
+          <span class="skill-emoji">♛</span>
+          <b data-t="skill_advanced">Продвинутый</b>
         </div>
       </div>
+      <button class="btn btn-secondary" id="regSkillBack" data-t="btn_back">Назад</button>
+    </div>
+  </div>
+</section>
 
-      <button id="navPlayFriendBtn" class="btn-main" data-i18n="playFriendBtn">🎮 Играть с другом</button>
-      <button id="navPlayAiBtn" class="btn-main btn-alt" data-i18n="playAiBtn">🤖 Играть с ИИ</button>
-
-      <div class="nav-grid">
-        <button id="navFriendsBtn" class="nav-card">
-          <span class="nav-icon">🤝</span>
-          <span data-i18n="friendsBtn">Друзья</span>
-          <span id="navFriendsBadge" class="count-badge" style="display:none;"></span>
-        </button>
-        <button id="navLeaderboardBtn" class="nav-card">
-          <span class="nav-icon">🏆</span>
-          <span data-i18n="leaderboardBtn">Лидеры</span>
-        </button>
-        <button id="navLearnBtn" class="nav-card">
-          <span class="nav-icon">📖</span>
-          <span data-i18n="learnBtn">Учиться</span>
-        </button>
-        <button id="navSettingsBtn" class="nav-card">
-          <span class="nav-icon">⚙️</span>
-          <span data-i18n="settingsBtn">Настройки</span>
-        </button>
-      </div>
+<!-- ГЛАВНОЕ МЕНЮ -->
+<section id="screen-menu" class="screen hidden">
+  <div class="topbar">
+    <h1 class="logo">♞ ChessFriends</h1>
+  </div>
+  <div class="profile-card card">
+    <div class="avatar" id="menuAvatar">?</div>
+    <div>
+      <div class="profile-name" id="menuName">—</div>
+      <div class="profile-login" id="menuLogin">@—</div>
+      <div class="profile-badge" id="menuSkillBadge">—</div>
     </div>
   </div>
 
-  <!-- AI SETUP -->
-  <div id="aiSetupScreen" class="screen">
-    <div class="card">
-      <button class="back-btn" id="backFromAiSetup" data-i18n="backBtn">← Назад</button>
-      <h2 data-i18n="aiSetupTitle">Выбери сложность ИИ</h2>
-      <div class="difficulty-list">
-        <button class="difficulty-card" data-diff="easy">
-          <span class="diff-emoji">🙂</span>
-          <span data-i18n="difficultyEasy">Лёгкая</span>
-        </button>
-        <button class="difficulty-card" data-diff="medium">
-          <span class="diff-emoji">😐</span>
-          <span data-i18n="difficultyMedium">Средняя</span>
-        </button>
-        <button class="difficulty-card" data-diff="hard">
-          <span class="diff-emoji">😈</span>
-          <span data-i18n="difficultyHard">Тяжёлая</span>
-        </button>
-      </div>
-    </div>
+  <div class="menu-actions">
+    <button class="btn btn-big btn-primary" id="btnPlayFriend">🤝 <span data-t="btn_play_friend">Играть с другом</span></button>
+    <button class="btn btn-big btn-accent2" id="btnPlayAI">🤖 <span data-t="btn_play_ai">Играть с ИИ</span></button>
   </div>
 
-  <!-- SETTINGS -->
-  <div id="settingsScreen" class="screen">
-    <div class="card">
-      <button class="back-btn" id="backFromSettings" data-i18n="backBtn">← Назад</button>
-      <h2 data-i18n="settingsTitle">Настройки</h2>
-
-      <div class="settings-avatar"><span class="avatar avatar-lg" id="settingsAvatarPreview">?</span></div>
-
-      <label class="field-label" data-i18n="nicknameFieldLabel">Ник</label>
-      <input type="text" id="nicknameInput" maxlength="16">
-      <button id="saveNicknameBtn" class="btn-main" data-i18n="saveBtn">💾 Сохранить</button>
-
-      <label class="field-label" data-i18n="themeLabel">Тема</label>
-      <div class="toggle-row">
-        <button id="themeDarkBtn" class="toggle-btn" data-i18n="themeDark">🌙 Тёмная</button>
-        <button id="themeLightBtn" class="toggle-btn" data-i18n="themeLight">☀️ Светлая</button>
-      </div>
-
-      <label class="field-label" data-i18n="languageLabel">Язык</label>
-      <div class="toggle-row">
-        <button id="langRuBtn" class="toggle-btn">RU</button>
-        <button id="langEnBtn" class="toggle-btn">EN</button>
-      </div>
-
-      <label class="field-label" data-i18n="soundLabel">Звук</label>
-      <div class="toggle-row">
-        <button id="soundToggleBtn" class="toggle-btn">🔊 ON</button>
-      </div>
-
-      <label class="field-label" data-i18n="privacyLabel">Кто может писать вам</label>
-      <div class="toggle-row">
-        <button id="privacyAllBtn" class="toggle-btn" data-i18n="privacyAll">Все</button>
-        <button id="privacyFriendsBtn" class="toggle-btn" data-i18n="privacyFriends">Друзья</button>
-        <button id="privacyNobodyBtn" class="toggle-btn" data-i18n="privacyNobody">Никто</button>
-      </div>
-
-      <button id="shareProfileBtn" class="btn-secondary" data-i18n="shareProfileBtn" style="margin-top:14px;">🔗 Поделиться профилем</button>
-
-      <div class="stats-box">
-        <h3 data-i18n="statsTitle">Статистика</h3>
-        <div class="stats-row">
-          <div class="stat"><span class="stat-value" id="statWins">0</span><span class="stat-label" data-i18n="winsLabel">Побед</span></div>
-          <div class="stat"><span class="stat-value" id="statLosses">0</span><span class="stat-label" data-i18n="lossesLabel">Поражений</span></div>
-          <div class="stat"><span class="stat-value" id="statDraws">0</span><span class="stat-label" data-i18n="drawsLabel">Ничьих</span></div>
-        </div>
-      </div>
-
-      <div class="stats-box">
-        <h3 data-i18n="matchHistoryTitle">Последние партии</h3>
-        <div id="matchHistoryList"></div>
-      </div>
-
-      <button id="resetProfileBtn" class="btn-secondary danger" data-i18n="resetBtn">🗑️ Сбросить профиль</button>
-    </div>
+  <div class="nav-grid">
+    <button class="nav-btn" id="navFriends"><span class="badge hidden" id="friendReqBadge">0</span>👥 <span data-t="nav_friends">Друзья</span></button>
+    <button class="nav-btn" id="navLeaders">🏆 <span data-t="nav_leaders">Лидеры</span></button>
+    <button class="nav-btn" id="navLearn">📘 <span data-t="nav_learn">Учиться</span></button>
+    <button class="nav-btn" id="navSettings">⚙️ <span data-t="nav_settings">Настройки</span></button>
   </div>
+</section>
 
-  <!-- LEADERBOARD -->
-  <div id="leaderboardScreen" class="screen">
-    <div class="card card-wide">
-      <button class="back-btn" id="backFromLeaderboard" data-i18n="backBtn">← Назад</button>
-      <h2 data-i18n="leaderboardTitle">🏆 Лидерборд</h2>
-      <div id="leaderboardList" class="leaderboard-list"></div>
-    </div>
-  </div>
-
-  <!-- FRIENDS -->
-  <div id="friendsScreen" class="screen">
-    <div class="card card-wide">
-      <button class="back-btn" id="backFromFriends" data-i18n="backBtn">← Назад</button>
-      <h2 data-i18n="friendsTitle">🤝 Друзья</h2>
-
-      <div class="toggle-row">
-        <button id="friendsTabBtn" class="toggle-btn active"><span data-i18n="friendsTab">Друзья</span></button>
-        <button id="requestsTabBtn" class="toggle-btn"><span data-i18n="requestsTab">Заявки</span> <span id="requestsCountBadge" class="count-badge" style="display:none;"></span></button>
-      </div>
-
-      <div id="friendsPane">
-        <div class="link-row">
-          <input type="text" id="addFriendInput" data-i18n-ph="addFriendPlaceholder" placeholder="Ник друга">
-          <button id="addFriendBtn" data-i18n="addFriendBtn">Добавить</button>
-        </div>
-        <p id="addFriendMsg" class="error-text"></p>
-        <div id="friendsList" class="leaderboard-list"></div>
-      </div>
-
-      <div id="requestsPane" style="display:none;">
-        <div id="requestsList" class="leaderboard-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- DIRECT CHAT -->
-  <div id="directChatScreen" class="screen">
-    <div class="card">
-      <button class="back-btn" id="backFromDirectChat" data-i18n="backBtn">← Назад</button>
-      <h2 id="directChatTitle">Chat</h2>
-      <div id="directChatMessages" class="chat-messages direct-chat-messages"></div>
-      <div class="chat-input-row">
-        <input type="text" id="directChatInput" data-i18n-ph="chatPlaceholder" placeholder="Сообщение...">
-        <button id="sendDirectChatBtn">➤</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- LEARN -->
-  <div id="learnScreen" class="screen">
-    <div class="card card-wide">
-      <button class="back-btn" id="backFromLearn" data-i18n="backBtn">← Назад</button>
-      <h2 data-i18n="learnTitle">📖 Научиться играть</h2>
-      <div id="learnAccordion" class="learn-accordion"></div>
-    </div>
-  </div>
-
-  <!-- WAITING -->
-  <div id="waitingScreen" class="screen">
-    <div class="card">
-      <h2 data-i18n="waitingTitle">Ожидание соперника...</h2>
-      <p><span data-i18n="yourColorLabel">Ваш цвет:</span> <strong id="yourColorDisplay"></strong></p>
+<!-- ОЖИДАНИЕ / ПОДКЛЮЧЕНИЕ -->
+<section id="screen-waiting" class="screen hidden">
+  <div class="card center-card">
+    <div class="spinner"></div>
+    <h2 id="waitingTitle" data-t="waiting_title">Ждём соперника...</h2>
+    <div id="waitingLinkBlock">
+      <p class="hint" data-t="waiting_hint">Отправь эту ссылку другу:</p>
       <div class="link-row">
-        <input type="text" id="roomLinkInput" readonly>
-        <button id="copyLinkBtn" data-i18n="copyBtn">📋 Копировать</button>
-      </div>
-      <p class="hint" data-i18n="hintJoin">Отправьте эту ссылку другу</p>
-      <div class="spinner"></div>
-    </div>
-  </div>
-
-  <!-- CONNECTING -->
-  <div id="connectingScreen" class="screen">
-    <div class="card">
-      <h2 data-i18n="connectingTitle">Подключение к игре...</h2>
-      <div class="spinner"></div>
-    </div>
-  </div>
-
-  <!-- GAME -->
-  <div id="gameScreen" class="screen">
-    <div class="game-layout">
-      <div class="side-panel">
-        <div class="player-info">
-          <span class="avatar" id="yourAvatar">?</span>
-          <div class="player-text">
-            <span id="yourNickname">Вы</span>
-            <span id="yourColor" class="color-indicator"></span>
-          </div>
-        </div>
-        <div class="player-info">
-          <span class="avatar" id="oppAvatar">?</span>
-          <div class="player-text">
-            <span id="opponentNickname">Соперник</span>
-            <span id="opponentColor" class="color-indicator"></span>
-          </div>
-        </div>
-        <p id="gameStatus" class="status"></p>
-        <div id="movesList" class="moves-list"></div>
-        <div class="btn-row">
-          <button id="resignBtn" class="btn-secondary" data-i18n="resignBtn">🏳️ Сдаться</button>
-          <button id="rematchBtn" class="btn-secondary" data-i18n="rematchBtn">🔄 Реванш</button>
-        </div>
-        <div class="chat-box" id="chatBox">
-          <div id="chatMessages" class="chat-messages"></div>
-          <div class="chat-input-row">
-            <input type="text" id="chatInput" data-i18n-ph="chatPlaceholder" placeholder="Сообщение...">
-            <button id="sendChatBtn">➤</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="board-area">
-        <div class="board-row">
-          <div id="rankLabels" class="rank-labels"></div>
-          <div id="chessboard" class="chessboard"></div>
-        </div>
-        <div id="fileLabels" class="file-labels"></div>
+        <input id="waitingLinkInput" type="text" readonly>
+        <button class="btn btn-primary" id="copyLinkBtn" data-t="btn_copy">Копировать</button>
       </div>
     </div>
+    <button class="btn btn-secondary" id="cancelWaitBtn" data-t="btn_cancel">Отмена</button>
+  </div>
+</section>
+
+<section id="screen-connecting" class="screen hidden">
+  <div class="card center-card">
+    <div class="spinner"></div>
+    <h2 data-t="connecting_title">Подключаемся к игре...</h2>
+  </div>
+</section>
+
+<!-- НАСТРОЙКА ИГРЫ С ИИ -->
+<section id="screen-ai-setup" class="screen hidden">
+  <div class="topbar"><button class="btn btn-icon" id="aiBack">←</button><h2 data-t="ai_setup_title">Выбери сложность</h2></div>
+  <div class="ai-cards">
+    <div class="ai-card" data-level="easy"><span class="skill-emoji">😊</span><b data-t="ai_easy">Лёгкая</b></div>
+    <div class="ai-card" data-level="medium"><span class="skill-emoji">🧠</span><b data-t="ai_medium">Средняя</b></div>
+    <div class="ai-card" data-level="hard"><span class="skill-emoji">🔥</span><b data-t="ai_hard">Тяжёлая</b></div>
+  </div>
+</section>
+
+<!-- НАСТРОЙКИ -->
+<section id="screen-settings" class="screen hidden">
+  <div class="topbar"><button class="btn btn-icon" id="settingsBack">←</button><h2 data-t="settings_title">Настройки</h2></div>
+  <div class="card">
+    <label data-t="settings_name">Отображаемое имя</label>
+    <div class="link-row">
+      <input id="setNameInput" type="text" maxlength="20">
+      <button class="btn btn-primary" id="setNameSave" data-t="btn_save">Сохранить</button>
+    </div>
+  </div>
+  <div class="card settings-row">
+    <span data-t="settings_theme">Тема</span>
+    <button class="btn btn-secondary" id="themeToggle">🌙</button>
+  </div>
+  <div class="card settings-row">
+    <span data-t="settings_lang">Язык</span>
+    <button class="btn btn-secondary" id="langToggle">RU</button>
+  </div>
+  <div class="card settings-row">
+    <span data-t="settings_sound">Звук</span>
+    <button class="btn btn-secondary" id="soundToggle">🔊</button>
+  </div>
+  <div class="card">
+    <label data-t="settings_privacy">Кто может мне писать</label>
+    <select id="privacySelect">
+      <option value="all" data-t="privacy_all">Все</option>
+      <option value="friends" data-t="privacy_friends">Только друзья</option>
+      <option value="nobody" data-t="privacy_nobody">Никто</option>
+    </select>
+  </div>
+  <div class="card">
+    <label data-t="settings_share">Поделиться профилем</label>
+    <div class="link-row">
+      <input id="shareProfileLink" type="text" readonly>
+      <button class="btn btn-primary" id="copyProfileBtn" data-t="btn_copy">Копировать</button>
+    </div>
+  </div>
+  <div class="card" id="statsBlock">
+    <label data-t="settings_stats">Статистика</label>
+    <div class="stats-grid">
+      <div><b id="statWins">0</b><span data-t="stat_wins">Победы</span></div>
+      <div><b id="statLosses">0</b><span data-t="stat_losses">Поражения</span></div>
+      <div><b id="statDraws">0</b><span data-t="stat_draws">Ничьи</span></div>
+    </div>
+  </div>
+  <button class="btn btn-danger" id="resetProfileBtn" data-t="btn_reset_profile">Сбросить профиль</button>
+</section>
+
+<!-- ЛИДЕРБОРД -->
+<section id="screen-leaderboard" class="screen hidden">
+  <div class="topbar"><button class="btn btn-icon" id="leaderboardBack">←</button><h2 data-t="leaders_title">Лидерборд</h2></div>
+  <div id="leaderboardList" class="list"></div>
+</section>
+
+<!-- ДРУЗЬЯ -->
+<section id="screen-friends" class="screen hidden">
+  <div class="topbar"><button class="btn btn-icon" id="friendsBack">←</button><h2 data-t="friends_title">Друзья</h2></div>
+  <div class="tabs">
+    <button class="tab-btn active" id="tabFriends" data-t="tab_friends">Друзья</button>
+    <button class="tab-btn" id="tabRequests"><span data-t="tab_requests">Заявки</span> <span class="badge hidden" id="reqCountBadge">0</span></button>
+  </div>
+  <div class="card add-friend-row">
+    <input id="addFriendLoginInput" type="text" placeholder="логин друга" data-tph="ph_friend_login">
+    <button class="btn btn-primary" id="addFriendBtn" data-t="btn_add">Добавить</button>
+  </div>
+  <p class="error-text" id="addFriendMsg"></p>
+  <div id="friendsList" class="list"></div>
+  <div id="requestsList" class="list hidden"></div>
+</section>
+
+<!-- ЛИЧНЫЙ ЧАТ -->
+<section id="screen-chat" class="screen hidden">
+  <div class="topbar"><button class="btn btn-icon" id="chatBack">←</button><h2 id="chatPartnerName">—</h2></div>
+  <div id="chatMessages" class="chat-messages"></div>
+  <div class="chat-input-row">
+    <input id="chatInput" type="text" data-tph="ph_message">
+    <button class="btn btn-primary" id="chatSendBtn">➤</button>
+  </div>
+</section>
+
+<!-- НАУЧИТЬСЯ ИГРАТЬ -->
+<section id="screen-learn" class="screen hidden">
+  <div class="topbar"><button class="btn btn-icon" id="learnBack">←</button><h2 data-t="learn_title">Научиться играть</h2></div>
+  <div class="tabs">
+    <button class="tab-btn active" id="learnTabLessons" data-t="learn_tab_lessons">Уроки</button>
+    <button class="tab-btn" id="learnTabAI" data-t="learn_tab_ai">Спроси помощника</button>
+  </div>
+  <div id="lessonsList" class="accordion"></div>
+  <div id="aiTutorBox" class="hidden">
+    <div id="aiTutorMessages" class="chat-messages"></div>
+    <div class="chips" id="aiTutorChips"></div>
+    <div class="chat-input-row">
+      <input id="aiTutorInput" type="text" data-tph="ph_ask">
+      <button class="btn btn-primary" id="aiTutorSendBtn">➤</button>
+    </div>
+  </div>
+</section>
+
+<!-- ИГРА -->
+<section id="screen-game" class="screen hidden">
+  <div class="game-top-bar">
+    <button class="btn btn-icon" id="gameExitBtn">←</button>
+    <div id="turnIndicator" class="turn-indicator">—</div>
+    <button class="btn btn-icon" id="toggleChatBtn">💬</button>
+  </div>
+  <div class="player-strip" id="playerTop">
+    <span class="p-avatar">?</span><span class="p-name">—</span>
   </div>
 
+  <div class="board-wrap">
+    <div class="rank-labels" id="rankLabels"></div>
+    <div class="board-col">
+      <div class="board" id="board"></div>
+      <div class="file-labels" id="fileLabels"></div>
+    </div>
+  </div>
+
+  <div class="player-strip" id="playerBottom">
+    <span class="p-avatar">?</span><span class="p-name">—</span>
+  </div>
+
+  <div class="game-controls">
+    <button class="btn btn-danger" id="resignBtn" data-t="btn_resign">Сдаться</button>
+  </div>
+
+  <div id="gameChatPanel" class="game-chat-panel hidden">
+    <div id="gameChatMessages" class="chat-messages"></div>
+    <div class="chat-input-row">
+      <input id="gameChatInput" type="text" data-tph="ph_message">
+      <button class="btn btn-primary" id="gameChatSendBtn">➤</button>
+    </div>
+  </div>
+</section>
+
+<!-- МОДАЛКИ -->
+<div class="modal-overlay hidden" id="modalPromotion">
+  <div class="modal-box">
+    <h3 data-t="promo_title">Выбери фигуру</h3>
+    <div class="promo-row" id="promoRow"></div>
+  </div>
 </div>
 
-<div id="promotionModal" class="modal">
-  <div class="modal-content">
-    <h3 data-i18n="choosePiece">Выберите фигуру</h3>
-    <div class="promotion-pieces">
-      <span class="promotion-piece" data-piece="q">♕</span>
-      <span class="promotion-piece" data-piece="r">♖</span>
-      <span class="promotion-piece" data-piece="b">♗</span>
-      <span class="promotion-piece" data-piece="n">♘</span>
+<div class="modal-overlay hidden" id="modalGameOver">
+  <div class="modal-box">
+    <h2 id="gameOverTitle">—</h2>
+    <p id="gameOverText">—</p>
+    <div class="row-gap">
+      <button class="btn btn-primary hidden" id="rematchBtn" data-t="btn_rematch">Реванш</button>
+      <button class="btn btn-secondary" id="gameOverMenuBtn" data-t="btn_to_menu">В меню</button>
     </div>
   </div>
 </div>
 
-<div id="gameOverModal" class="modal">
-  <div class="modal-content">
-    <h2 id="gameOverMessage"></h2>
-    <button id="modalRematchBtn" class="btn-main" data-i18n="rematchBtn">🔄 Реванш</button>
-    <button id="modalHomeBtn" class="btn-secondary" data-i18n="homeBtn">🏠 На главную</button>
+<div class="modal-overlay hidden" id="modalPlayerAction">
+  <div class="modal-box">
+    <h3 id="modalPlayerName">—</h3>
+    <div class="col-gap">
+      <button class="btn btn-primary" id="actionWriteBtn" data-t="action_write">✉️ Написать</button>
+      <button class="btn btn-accent3" id="actionAddFriendBtn" data-t="action_add_friend">➕ Добавить в друзья</button>
+      <button class="btn btn-secondary" id="actionCancelBtn" data-t="btn_cancel">Отмена</button>
+    </div>
   </div>
 </div>
 
-<div id="playerActionModal" class="modal">
-  <div class="modal-content">
-    <div class="settings-avatar"><span class="avatar avatar-lg" id="paAvatar">?</span></div>
-    <h3 id="paNickname">Player</h3>
-    <button id="paMessageBtn" class="btn-main" data-i18n="messageBtn">✉️ Написать</button>
-    <button id="paAddFriendBtn" class="btn-secondary" data-i18n="addFriendBtnModal">➕ Добавить в друзья</button>
-    <button id="paCloseBtn" class="btn-secondary" data-i18n="closeBtn">Закрыть</button>
+<div class="modal-overlay hidden" id="modalAddFriendLink">
+  <div class="modal-box">
+    <h3 data-t="add_link_title">Добавить в друзья?</h3>
+    <p id="addFriendLinkText">—</p>
+    <div class="row-gap">
+      <button class="btn btn-primary" id="addFriendLinkConfirm" data-t="btn_add">Добавить</button>
+      <button class="btn btn-secondary" id="addFriendLinkCancel" data-t="btn_cancel">Отмена</button>
+    </div>
   </div>
 </div>
 
-<div id="addFriendConfirmModal" class="modal">
-  <div class="modal-content">
-    <h3 id="addFriendConfirmText"></h3>
-    <button id="confirmAddFriendBtn" class="btn-main" data-i18n="accept">Принять</button>
-    <button id="cancelAddFriendBtn" class="btn-secondary" data-i18n="decline">Отклонить</button>
+<div class="modal-overlay hidden" id="modalInvite">
+  <div class="modal-box">
+    <h3 data-t="invite_title">Приглашение на игру</h3>
+    <p id="inviteText">—</p>
+    <div class="row-gap">
+      <button class="btn btn-primary" id="inviteAccept" data-t="btn_accept">Принять</button>
+      <button class="btn btn-secondary" id="inviteDecline" data-t="btn_decline">Отклонить</button>
+    </div>
   </div>
 </div>
 
