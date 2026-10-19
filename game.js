@@ -15,6 +15,16 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 /* ============================================================
+   ADMIN PANEL CONFIG — поменяй секрет на свой!
+   ============================================================ */
+const ADMIN_SECRET = 'ownergame';
+
+function checkIsAdmin(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get('admin') === ADMIN_SECRET;
+}
+
+/* ============================================================
    STATE
    ============================================================ */
 const $ = id => document.getElementById(id);
@@ -47,6 +57,10 @@ let directChatUnsub = null;
 let currentChatPartnerId = null;
 let onlineCheckInterval = null;
 
+// NEW: присутствие/хост/пинги
+let amIHost = false;
+let presenceInterval = null;
+
 /* ============================================================
    TRANSLATIONS
    ============================================================ */
@@ -64,7 +78,9 @@ const TRANSLATIONS = {
     accept: "Принять", decline: "Отклонить", copied: "Скопировано!",
     login_taken: "Этот логин уже занят", login_invalid: "Только латиница, цифры и _, от 3 до 16 символов",
     name_invalid: "Имя должно быть от 2 до 20 символов", bad_word: "Недопустимое слово в логине",
-    coming_soon: "Этот раздел скоро заработает!"
+    coming_soon: "Этот раздел скоро заработает!",
+    abandoned: "Соперник отключился от игры",
+    own_room_error: "Это ваша же комната! Отправьте ссылку другу, чтобы он мог присоединиться."
   },
   en: {
     play_friend: "Play with a friend", play_ai: "Play vs Computer",
@@ -79,7 +95,9 @@ const TRANSLATIONS = {
     accept: "Accept", decline: "Decline", copied: "Copied!",
     login_taken: "This login is already taken", login_invalid: "Latin letters, numbers and _ only, 3-16 chars",
     name_invalid: "Name must be 2-20 characters", bad_word: "Invalid word in login",
-    coming_soon: "This section is coming soon!"
+    coming_soon: "This section is coming soon!",
+    abandoned: "Opponent disconnected",
+    own_room_error: "This is your own room! Send the link to a friend so they can join."
   }
 };
 function t(key){
@@ -399,7 +417,10 @@ function wireMenuButtons(){
   safeOn('navRoyale', 'click', ()=>showScreen('screen-royale-setup'));
 
   document.querySelectorAll('.back-to-menu').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ renderMenu(); showScreen('screen-menu'); });
+    btn.addEventListener('click', ()=>{
+      stopPresenceTracking();
+      renderMenu(); showScreen('screen-menu');
+    });
   });
 
   document.querySelectorAll('[data-diff]').forEach(card=>{
@@ -413,6 +434,7 @@ function wireMenuButtons(){
   safeOn('backFromAIBtn', 'click', ()=>showScreen('screen-menu'));
 
   safeOn('cancelWaitingBtn', 'click', ()=>{
+    stopPresenceTracking();
     if(currentRoomId){
       db.collection('rooms').doc(currentRoomId).delete().catch(()=>{});
     }
@@ -448,7 +470,7 @@ function wireMenuButtons(){
   const spectateChatInput = $('spectateChatInput');
   if(spectateChatInput) spectateChatInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendSpectateChatMessage(); });
 
-  // Royale stubs
+  // Royale stubs (логика будет в отдельном royale.js следующим шагом)
   safeOn('createRoyaleBtn', 'click', ()=>{
     alert(t('coming_soon'));
   });
@@ -497,6 +519,7 @@ function createRoomWithLink(){
   });
 }
 
+// ИСПРАВЛЕНО: нельзя зайти гостем в свою же комнату
 function joinRoomById(roomId){
   showScreen('screen-connecting');
   const roomRef = db.collection('rooms').doc(roomId);
@@ -507,6 +530,14 @@ function joinRoomById(roomId){
       return;
     }
     const data = doc.data();
+
+    // NEW: защита от самоигры по собственной ссылке
+    if(data.hostId === myPlayerId){
+      alert(t('own_room_error'));
+      showScreen('screen-menu');
+      return;
+    }
+
     if(data.guestId && data.guestId !== myPlayerId){
       alert('Room is full');
       showScreen('screen-menu');
@@ -535,11 +566,14 @@ function joinRoomById(roomId){
    ============================================================ */
 function listenRoom(roomId){
   if(roomUnsubscribe) roomUnsubscribe();
+  stopPresenceTracking();
+
   roomUnsubscribe = db.collection('rooms').doc(roomId).onSnapshot(doc=>{
     if(!doc.exists) return;
     const data = doc.data();
 
-    if(data.hostId === myPlayerId) myColorChar = data.hostColor;
+    amIHost = (data.hostId === myPlayerId);
+    if(amIHost) myColorChar = data.hostColor;
     else myColorChar = data.hostColor === 'w' ? 'b' : 'w';
 
     if(data.status === 'waiting'){
@@ -558,7 +592,13 @@ function listenRoom(roomId){
       renderGamePlayers(data);
       renderGameChat(data.chat || []);
 
+      // NEW: отслеживание присутствия соперника
+      if(data.status === 'active' && data.guestId){
+        startPresenceTracking(roomId);
+      }
+
       if(data.status === 'finished'){
+        stopPresenceTracking();
         showGameOverModal(data.winner, data.reason);
       }
     }
@@ -566,6 +606,48 @@ function listenRoom(roomId){
     console.error('listenRoom error', err);
   });
 }
+
+// NEW: система "пинга" — определяем, что соперник отключился
+function startPresenceTracking(roomId){
+  if(presenceInterval) clearInterval(presenceInterval);
+
+  const myField = amIHost ? 'hostPing' : 'guestPing';
+  const oppField = amIHost ? 'guestPing' : 'hostPing';
+
+  // сразу отмечаемся
+  db.collection('rooms').doc(roomId).update({[myField]: Date.now()}).catch(()=>{});
+
+  presenceInterval = setInterval(()=>{
+    db.collection('rooms').doc(roomId).update({[myField]: Date.now()}).catch(()=>{});
+
+    db.collection('rooms').doc(roomId).get().then(snap=>{
+      if(!snap.exists) return;
+      const d = snap.data();
+      if(d.status !== 'active') return;
+      const oppPing = d[oppField] || d.updatedAt || 0;
+      if(Date.now() - oppPing > 25000){
+        const winner = myColorChar;
+        db.collection('rooms').doc(roomId).update({
+          status:'finished', winner, reason:'abandoned', updatedAt: Date.now()
+        }).then(()=>updateStatsAfterGame(winner, 'abandoned'));
+      }
+    }).catch(()=>{});
+  }, 8000);
+}
+function stopPresenceTracking(){
+  if(presenceInterval){ clearInterval(presenceInterval); presenceInterval = null; }
+}
+
+// NEW: лучшая попытка сообщить о выходе при закрытии вкладки (не 100% надёжно само по себе,
+// основная защита — presence-пинг выше)
+window.addEventListener('beforeunload', ()=>{
+  if(currentRoomId && !gameOver && !vsAI && chessGame){
+    const winner = myColorChar === 'w' ? 'b' : 'w';
+    db.collection('rooms').doc(currentRoomId).update({
+      status:'finished', winner, reason:'abandoned', updatedAt: Date.now()
+    });
+  }
+});
 
 function renderGamePlayers(data){
   const top = $('playerTop');
@@ -591,6 +673,33 @@ const PIECE_UNICODE = {
   bp:'♟', bn:'♞', bb:'♝', br:'♜', bq:'♛', bk:'♚'
 };
 
+// NEW: принудительная сетка — не зависит от CSS, чинит баг "доска-столбик"
+function applyGridLayout(el){
+  if(!el) return;
+  el.style.display = 'grid';
+  el.style.gridTemplateColumns = 'repeat(8, 1fr)';
+  el.style.gridTemplateRows = 'repeat(8, 1fr)';
+  el.style.width = '100%';
+  el.style.aspectRatio = '1 / 1';
+}
+// NEW: подписи координат раскладываем явно
+function applyCoordLayout(el, vertical){
+  if(!el) return;
+  el.style.display = 'flex';
+  el.style.flexDirection = vertical ? 'column' : 'row';
+  el.style.justifyContent = 'space-between';
+}
+// NEW: явно разный цвет для белых/чёрных фигур — не зависит от CSS темы
+function stylePieceElement(el, color){
+  if(color === 'w'){
+    el.style.color = '#f6f1e3';
+    el.style.textShadow = '0 1px 0 rgba(0,0,0,.55), 0 2px 3px rgba(0,0,0,.45)';
+  } else {
+    el.style.color = '#1b1309';
+    el.style.textShadow = '0 1px 0 rgba(255,255,255,.35), 0 1px 2px rgba(0,0,0,.6)';
+  }
+}
+
 function squareNameFromIndex(row, col, flip){
   const realRow = flip ? 7 - row : row;
   const realCol = flip ? 7 - col : col;
@@ -605,6 +714,8 @@ function renderCoordLabels(){
   if(!rankLabels || !fileLabels) return;
   rankLabels.innerHTML = '';
   fileLabels.innerHTML = '';
+  applyCoordLayout(rankLabels, true);
+  applyCoordLayout(fileLabels, false);
   const flip = myColorChar === 'b';
   const ranks = flip ? [1,2,3,4,5,6,7,8] : [8,7,6,5,4,3,2,1];
   const files = flip ? ['h','g','f','e','d','c','b','a'] : ['a','b','c','d','e','f','g','h'];
@@ -626,6 +737,7 @@ function renderBoard(){
   const boardEl = $('board');
   if(!boardEl || !chessGame) return;
   boardEl.innerHTML = '';
+  applyGridLayout(boardEl);
   const boardState = chessGame.board();
   const flip = myColorChar === 'b';
 
@@ -645,7 +757,14 @@ function renderBoard(){
         const key = pieceData.color + pieceData.type;
         const pieceEl = document.createElement('div');
         pieceEl.className = 'piece';
+        pieceEl.style.fontSize = '2.2rem';
+        pieceEl.style.display = 'flex';
+        pieceEl.style.alignItems = 'center';
+        pieceEl.style.justifyContent = 'center';
+        pieceEl.style.width = '100%';
+        pieceEl.style.height = '100%';
         pieceEl.textContent = PIECE_UNICODE[key] || '';
+        stylePieceElement(pieceEl, pieceData.color);
         square.appendChild(pieceEl);
       }
 
@@ -768,14 +887,17 @@ function syncMoveToRoom(status, winner, reason){
     status, winner, reason,
     updatedAt: Date.now()
   }).then(()=>{
-    if(status==='finished') updateStatsAfterGame(winner, reason);
+    if(status==='finished'){
+      stopPresenceTracking();
+      updateStatsAfterGame(winner, reason);
+    }
   }).catch(err=>console.error('syncMoveToRoom error', err));
 }
 
 function updateStatsAfterGame(winner, reason){
   if(!myProfile) return;
   let field = null;
-  if(reason === 'checkmate'){
+  if(reason === 'checkmate' || reason === 'resign' || reason === 'abandoned'){
     field = (winner === myColorChar) ? 'wins' : 'losses';
   } else {
     field = 'draws';
@@ -791,6 +913,7 @@ function resignGame(){
   if(vsAI){
     showGameOverModal(winner, 'resign');
   } else if(currentRoomId){
+    stopPresenceTracking();
     db.collection('rooms').doc(currentRoomId).update({
       status:'finished', winner, reason:'resign', updatedAt: Date.now()
     }).then(()=>updateStatsAfterGame(winner, 'resign'));
@@ -823,6 +946,7 @@ function closeModal(id){ const el = $(id); if(el) el.classList.remove('active');
 function wireGameOverModal(){
   safeOn('gameOverMenuBtn', 'click', ()=>{
     closeModal('modalGameOver');
+    stopPresenceTracking();
     if(roomUnsubscribe) roomUnsubscribe();
     currentRoomId = null;
     renderMenu();
@@ -836,7 +960,10 @@ function showGameOverModal(winner, reason){
     if(reason === 'draw' || reason === 'stalemate') msg = t('draw');
     else if(winner === myColorChar) msg = t('you_win');
     else msg = t('you_lose');
-    const reasonKey = reason === 'checkmate' ? 'checkmate' : (reason==='stalemate'?'stalemate':'draw_reason');
+    let reasonKey = 'draw_reason';
+    if(reason === 'checkmate') reasonKey = 'checkmate';
+    else if(reason === 'stalemate') reasonKey = 'stalemate';
+    else if(reason === 'abandoned') reasonKey = 'abandoned';
     textEl.textContent = msg + ' (' + t(reasonKey) + ')';
   }
   openModal('modalGameOver');
@@ -846,6 +973,7 @@ function showGameOverModal(winner, reason){
    AI
    ============================================================ */
 function startAIGame(){
+  stopPresenceTracking();
   chessGame = new Chess();
   myColorChar = Math.random() < 0.5 ? 'w' : 'b';
   vsAI = true;
@@ -1049,6 +1177,9 @@ function wireFriendsScreen(){
       if(targetDoc.id === myPlayerId){ alert("That's you!"); return; }
       sendFriendRequestTo(targetDoc.id);
       if(input) input.value = '';
+    }).catch(err=>{
+      console.error('addFriendBtn search error', err);
+      alert('Error searching user: ' + err.message);
     });
   });
 }
@@ -1098,8 +1229,9 @@ function renderFriendsList(){
 function renderRequestsList(){
   const list = $('requestsList');
   if(!list) return;
-  list.innerHTML = '';
+  list.innerHTML = '<div class="loading">...</div>';
   db.collection('friendRequests').where('toId','==', myPlayerId).where('status','==','pending').get().then(snap=>{
+    list.innerHTML = '';
     if(snap.empty){
       list.innerHTML = '<div class="empty">No requests</div>';
       return;
@@ -1119,6 +1251,9 @@ function renderRequestsList(){
       if(decBtn) decBtn.addEventListener('click', ()=>respondFriendRequest(doc.id, req, false));
       list.appendChild(row);
     });
+  }).catch(err=>{
+    console.error('renderRequestsList error', err);
+    list.innerHTML = 'Error: ' + err.message;
   });
 }
 
@@ -1127,12 +1262,29 @@ function sendFriendRequestTo(targetId){
   if(myProfile && myProfile.friends && myProfile.friends.includes(targetId)){
     alert(t('friend_added')); return;
   }
-  db.collection('friendRequests').add({
-    fromId: myPlayerId, fromLogin: plogin(myProfile), fromName: pname(myProfile),
-    toId: targetId, status: 'pending', createdAt: Date.now()
-  }).then(()=>{
-    alert(t('request_sent'));
-  }).catch(err=>console.error('sendFriendRequestTo error', err));
+  // проверка на дубликат уже существующей заявки
+  db.collection('friendRequests')
+    .where('fromId','==', myPlayerId)
+    .where('toId','==', targetId)
+    .where('status','==','pending')
+    .get().then(existing=>{
+      if(!existing.empty){
+        alert(t('request_sent'));
+        return;
+      }
+      db.collection('friendRequests').add({
+        fromId: myPlayerId, fromLogin: plogin(myProfile), fromName: pname(myProfile),
+        toId: targetId, status: 'pending', createdAt: Date.now()
+      }).then(()=>{
+        alert(t('request_sent'));
+      }).catch(err=>{
+        console.error('sendFriendRequestTo error', err);
+        alert('Error sending request: ' + err.message);
+      });
+    }).catch(err=>{
+      console.error('sendFriendRequestTo check error', err);
+      alert('Error: ' + err.message);
+    });
 }
 
 function respondFriendRequest(reqDocId, req, accepted){
@@ -1147,7 +1299,10 @@ function respondFriendRequest(reqDocId, req, accepted){
       loadMyProfile();
     }
     renderRequestsList();
-  }).catch(err=>console.error('respondFriendRequest error', err));
+  }).catch(err=>{
+    console.error('respondFriendRequest error', err);
+    alert('Error: ' + err.message);
+  });
 }
 
 function listenFriendRequests(){
@@ -1268,7 +1423,7 @@ function renderDirectChat(messages){
   messages.forEach(m=>{
     const div = document.createElement('div');
     div.className = 'chat-msg' + (m.from===myPlayerId ? ' mine' : '');
-    div.textContent = m.text;
+    div.textContent = (m.admin ? '👑 ' : '') + m.text;
     box.appendChild(div);
   });
   box.scrollTop = box.scrollHeight;
@@ -1341,10 +1496,12 @@ function openSpectateView(roomId){
   }, err=>console.error('openSpectateView error', err));
 }
 
+// ИСПРАВЛЕНО: принудительная сетка + явные цвета фигур — чинит "доску-столбик" и "все фигуры белые"
 function renderSpectateBoard(game, lastMove){
   const boardEl = $('spectateBoard');
   if(!boardEl) return;
   boardEl.innerHTML = '';
+  applyGridLayout(boardEl);
   const boardState = game.board();
   for(let row=0; row<8; row++){
     for(let col=0; col<8; col++){
@@ -1359,7 +1516,14 @@ function renderSpectateBoard(game, lastMove){
         const key = pieceData.color + pieceData.type;
         const pieceEl = document.createElement('div');
         pieceEl.className = 'piece';
+        pieceEl.style.fontSize = '2.2rem';
+        pieceEl.style.display = 'flex';
+        pieceEl.style.alignItems = 'center';
+        pieceEl.style.justifyContent = 'center';
+        pieceEl.style.width = '100%';
+        pieceEl.style.height = '100%';
         pieceEl.textContent = PIECE_UNICODE[key] || '';
+        stylePieceElement(pieceEl, pieceData.color);
         square.appendChild(pieceEl);
       }
       if(lastMove && (lastMove.from===squareName || lastMove.to===squareName)){
@@ -1375,6 +1539,8 @@ function renderSpectateCoords(){
   const fileLabels = $('spectateFileLabels');
   if(!rankLabels || !fileLabels) return;
   rankLabels.innerHTML=''; fileLabels.innerHTML='';
+  applyCoordLayout(rankLabels, true);
+  applyCoordLayout(fileLabels, false);
   [8,7,6,5,4,3,2,1].forEach(r=>{
     const div=document.createElement('div'); div.className='coord-label'; div.textContent=r; rankLabels.appendChild(div);
   });
@@ -1586,11 +1752,88 @@ function wireAddFriendLinkModal(){
 }
 
 /* ============================================================
+   ADMIN PANEL (NEW) — доступ только по ?admin=ТВОЙ_СЕКРЕТ
+   ============================================================ */
+function renderAdminPanel(){
+  document.title = 'Admin — Chess Club';
+  document.body.innerHTML = '';
+  document.body.style.cssText = 'margin:0;background:#120d08;color:#f2e6c9;font-family:Arial,sans-serif;padding:24px;min-height:100vh;box-sizing:border-box;';
+  document.body.innerHTML = `
+    <h1 style="color:#d4af37;font-family:Georgia,serif;margin-bottom:4px;">🔑 Admin Panel — Chess Club</h1>
+    <p style="opacity:.6;max-width:640px;line-height:1.5;">Паролей в системе нет — вход определяется случайным ID в localStorage браузера игрока. Ниже — все профили из базы. Кнопка «Написать» отправляет сообщение в обход настройки приватности пользователя.</p>
+    <input id="adminSearch" placeholder="Поиск по логину или имени..." style="padding:10px 14px;width:320px;max-width:90%;border-radius:10px;border:1px solid #4a3a24;background:#1c150d;color:#f2e6c9;margin:16px 0;font-size:14px;outline:none;">
+    <div id="adminCount" style="opacity:.6;margin-bottom:12px;"></div>
+    <div id="adminList"></div>
+  `;
+
+  let allRows = [];
+
+  db.collection('players').get().then(snap=>{
+    const list = $('adminList');
+    const countEl = $('adminCount');
+    list.innerHTML = '';
+    allRows = [];
+    countEl.textContent = 'Всего игроков: ' + snap.size;
+
+    snap.forEach(doc=>{
+      let p;
+      try{ p = normalizeProfile(doc.data()); }catch(e){ return; }
+      const online = (Date.now() - (p.lastSeen||0)) < 90000;
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:12px;border-bottom:1px solid #332817;';
+      row.dataset.search = (p.login + ' ' + p.name).toLowerCase();
+      row.innerHTML = `
+        <span>${online?'🟢':'⚪'}</span>
+        <span style="min-width:150px;font-weight:bold;">${p.name}</span>
+        <span style="min-width:150px;opacity:.75;">@${p.login}</span>
+        <span style="min-width:110px;">уровень: ${p.skill}</span>
+        <span style="min-width:140px;">W${p.wins} / L${p.losses} / D${p.draws}</span>
+        <span style="min-width:110px;">друзей: ${(p.friends||[]).length}</span>
+        <span style="min-width:120px;">приватность: ${p.privacy}</span>
+        <span style="opacity:.4;font-size:12px;">ID: ${doc.id}</span>
+        <button data-id="${doc.id}" style="background:#d4af37;color:#1a1208;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:bold;">✉ Написать</button>
+      `;
+      row.querySelector('button').addEventListener('click', ()=>{
+        const text = prompt('Сообщение для ' + p.name + ' (@' + p.login + '). Отправится даже при настройке «Никто»:');
+        if(text && text.trim()){
+          adminSendMessage(doc.id, text.trim());
+        }
+      });
+      list.appendChild(row);
+      allRows.push(row);
+    });
+  }).catch(err=>{
+    $('adminList').textContent = 'Ошибка загрузки: ' + err.message;
+  });
+
+  $('adminSearch').addEventListener('input', e=>{
+    const q = e.target.value.toLowerCase();
+    allRows.forEach(row=>{
+      row.style.display = row.dataset.search.includes(q) ? '' : 'none';
+    });
+  });
+}
+
+function adminSendMessage(targetId, text){
+  const chatId = chatIdFor(myPlayerId, targetId);
+  const msg = {from: myPlayerId, text: text, time: Date.now(), admin: true};
+  db.collection('directChats').doc(chatId).set({
+    messages: firebase.firestore.FieldValue.arrayUnion(msg)
+  }, {merge:true}).then(()=>alert('Отправлено')).catch(err=>alert('Ошибка: ' + err.message));
+}
+
+/* ============================================================
    STARTUP
    ============================================================ */
 document.addEventListener('DOMContentLoaded', ()=>{
+  if(checkIsAdmin()){
+    renderAdminPanel();
+    return;
+  }
   try{ initRegistrationHandlers(); }catch(e){ console.error('initRegistrationHandlers failed:', e); }
   try{ wireMenuButtons(); }catch(e){ console.error('wireMenuButtons failed:', e); }
 });
 
-loadMyProfile();
+if(!checkIsAdmin()){
+  loadMyProfile();
+}
