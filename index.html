@@ -2,312 +2,398 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-<title>ChessFriends</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chess Club — Online Chess</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-theme="dark">
 
-<div id="toast" class="toast hidden"></div>
-
-<!-- РЕГИСТРАЦИЯ -->
-<section id="screen-register" class="screen">
-  <div class="card reg-card">
-    <h1 class="logo">♞ ChessFriends</h1>
-
-    <div class="reg-step active" data-step="login">
-      <h2 data-t="reg_login_title">Придумай логин</h2>
-      <p class="hint" data-t="reg_login_hint">Только латинские буквы, цифры и _. От 3 до 16 символов. По нему тебя будут находить друзья.</p>
-      <input id="regLoginInput" type="text" maxlength="16" placeholder="example_123" autocomplete="off">
-      <p class="error-text" id="regLoginError"></p>
-      <button class="btn btn-primary" id="regLoginNext" data-t="btn_next">Далее</button>
-    </div>
-
-    <div class="reg-step" data-step="name">
-      <h2 data-t="reg_name_title">Как тебя зовут?</h2>
-      <p class="hint" data-t="reg_name_hint">Это имя увидят другие игроки. Можно на любом языке.</p>
-      <input id="regNameInput" type="text" maxlength="20" placeholder="Егор" autocomplete="off">
-      <p class="error-text" id="regNameError"></p>
-      <div class="row-gap">
-        <button class="btn btn-secondary" id="regNameBack" data-t="btn_back">Назад</button>
-        <button class="btn btn-primary" id="regNameNext" data-t="btn_next">Далее</button>
-      </div>
-    </div>
-
-    <div class="reg-step" data-step="skill">
-      <h2 data-t="reg_skill_title">Твой уровень игры</h2>
-      <p class="hint" data-t="reg_skill_hint">Это нужно для подбора соперника и советов</p>
-      <div class="skill-grid">
-        <div class="skill-card" data-skill="none">
-          <span class="skill-emoji">🌱</span>
-          <b data-t="skill_none">Вообще не умею</b>
-        </div>
-        <div class="skill-card" data-skill="beginner">
-          <span class="skill-emoji">♟️</span>
-          <b data-t="skill_beginner">Новичок</b>
-        </div>
-        <div class="skill-card" data-skill="intermediate">
-          <span class="skill-emoji">♝</span>
-          <b data-t="skill_intermediate">Средний</b>
-        </div>
-        <div class="skill-card" data-skill="advanced">
-          <span class="skill-emoji">♛</span>
-          <b data-t="skill_advanced">Продвинутый</b>
-        </div>
-      </div>
-      <button class="btn btn-secondary" id="regSkillBack" data-t="btn_back">Назад</button>
-    </div>
+<!-- ================= REGISTRATION ================= -->
+<div id="screen-register" class="screen">
+  <div class="reg-step active" data-step="1">
+    <h1>♟ Chess Club</h1>
+    <p>Придумай логин (латиница, цифры, _, 3-16 символов). По нему тебя смогут найти друзья.</p>
+    <input id="regLoginInput" type="text" placeholder="login_example" maxlength="16">
+    <p class="error-text" id="regLoginError" style="color:var(--danger); min-height:20px;"></p>
+    <button id="regLoginNextBtn" style="width:100%;">Далее</button>
   </div>
-</section>
 
-<!-- ГЛАВНОЕ МЕНЮ -->
-<section id="screen-menu" class="screen hidden">
-  <div class="topbar">
-    <h1 class="logo">♞ ChessFriends</h1>
-  </div>
-  <div class="profile-card card">
-    <div class="avatar" id="menuAvatar">?</div>
-    <div>
-      <div class="profile-name" id="menuName">—</div>
-      <div class="profile-login" id="menuLogin">@—</div>
-      <div class="profile-badge" id="menuSkillBadge">—</div>
+  <div class="reg-step" data-step="2">
+    <h1>Как тебя называть?</h1>
+    <p>Отображаемое имя — видно другим игрокам, можно на любом языке.</p>
+    <input id="regNameInput" type="text" placeholder="Имя" maxlength="20">
+    <p class="error-text" id="regNameError" style="color:var(--danger); min-height:20px;"></p>
+    <div style="display:flex; gap:10px;">
+      <button id="regNameBackBtn" class="btn-secondary" style="flex:1;">Назад</button>
+      <button id="regNameNextBtn" style="flex:2;">Далее</button>
     </div>
   </div>
 
-  <div class="menu-actions">
-    <button class="btn btn-big btn-primary" id="btnPlayFriend">🤝 <span data-t="btn_play_friend">Играть с другом</span></button>
-    <button class="btn btn-big btn-accent2" id="btnPlayAI">🤖 <span data-t="btn_play_ai">Играть с ИИ</span></button>
+  <div class="reg-step" data-step="3">
+    <h1>Твой уровень игры?</h1>
+    <div class="card" data-skill="none">🙈 Вообще не умею</div>
+    <div class="card" data-skill="beginner">🌱 Новичок</div>
+    <div class="card" data-skill="intermediate">♞ Средний</div>
+    <div class="card" data-skill="advanced">👑 Продвинутый</div>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button id="regSkillBackBtn" class="btn-secondary" style="flex:1;">Назад</button>
+      <button id="regFinishBtn" style="flex:2;">Готово!</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MENU ================= -->
+<div id="screen-menu" class="screen">
+  <div class="profile-header">
+    <div class="avatar-circle" id="menuAvatarInitial">P</div>
+    <div style="flex:1;">
+      <h2 id="menuPlayerName" style="margin:0;">Player</h2>
+      <div id="menuPlayerLogin" style="color:var(--text-dim);">@login</div>
+      <div id="menuPlayerSkill" style="color:var(--gold); font-size:0.85rem;">beginner</div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:12px; margin-top:16px;">
+    <button id="btnPlayFriend" style="flex:1; padding:20px;">🎮 Играть с другом</button>
+    <button id="btnPlayAI" style="flex:1; padding:20px;">🤖 Игра с ИИ</button>
   </div>
 
   <div class="nav-grid">
-    <button class="nav-btn" id="navFriends"><span class="badge hidden" id="friendReqBadge">0</span>👥 <span data-t="nav_friends">Друзья</span></button>
-    <button class="nav-btn" id="navLeaders">🏆 <span data-t="nav_leaders">Лидеры</span></button>
-    <button class="nav-btn" id="navLearn">📘 <span data-t="nav_learn">Учиться</span></button>
-    <button class="nav-btn" id="navSettings">⚙️ <span data-t="nav_settings">Настройки</span></button>
+    <button id="navFriends" class="btn-secondary">
+      👥 Друзья
+      <span class="nav-badge" id="friendReqBadge" style="display:none;">0</span>
+    </button>
+    <button id="navLeaderboard" class="btn-secondary">🏆 Лидеры</button>
+    <button id="navLearn" class="btn-secondary">📖 Учиться</button>
+    <button id="navSettings" class="btn-secondary">⚙️ Настройки</button>
+    <button id="navSpectate" class="btn-secondary">👁 Эфир</button>
+    <button id="navRoyale" class="btn-secondary">♛ Королевская битва</button>
   </div>
-</section>
+</div>
 
-<!-- ОЖИДАНИЕ / ПОДКЛЮЧЕНИЕ -->
-<section id="screen-waiting" class="screen hidden">
-  <div class="card center-card">
-    <div class="spinner"></div>
-    <h2 id="waitingTitle" data-t="waiting_title">Ждём соперника...</h2>
-    <div id="waitingLinkBlock">
-      <p class="hint" data-t="waiting_hint">Отправь эту ссылку другу:</p>
-      <div class="link-row">
-        <input id="waitingLinkInput" type="text" readonly>
-        <button class="btn btn-primary" id="copyLinkBtn" data-t="btn_copy">Копировать</button>
-      </div>
-    </div>
-    <button class="btn btn-secondary" id="cancelWaitBtn" data-t="btn_cancel">Отмена</button>
-  </div>
-</section>
-
-<section id="screen-connecting" class="screen hidden">
-  <div class="card center-card">
-    <div class="spinner"></div>
-    <h2 data-t="connecting_title">Подключаемся к игре...</h2>
-  </div>
-</section>
-
-<!-- НАСТРОЙКА ИГРЫ С ИИ -->
-<section id="screen-ai-setup" class="screen hidden">
-  <div class="topbar"><button class="btn btn-icon" id="aiBack">←</button><h2 data-t="ai_setup_title">Выбери сложность</h2></div>
-  <div class="ai-cards">
-    <div class="ai-card" data-level="easy"><span class="skill-emoji">😊</span><b data-t="ai_easy">Лёгкая</b></div>
-    <div class="ai-card" data-level="medium"><span class="skill-emoji">🧠</span><b data-t="ai_medium">Средняя</b></div>
-    <div class="ai-card" data-level="hard"><span class="skill-emoji">🔥</span><b data-t="ai_hard">Тяжёлая</b></div>
-  </div>
-</section>
-
-<!-- НАСТРОЙКИ -->
-<section id="screen-settings" class="screen hidden">
-  <div class="topbar"><button class="btn btn-icon" id="settingsBack">←</button><h2 data-t="settings_title">Настройки</h2></div>
-  <div class="card">
-    <label data-t="settings_name">Отображаемое имя</label>
-    <div class="link-row">
-      <input id="setNameInput" type="text" maxlength="20">
-      <button class="btn btn-primary" id="setNameSave" data-t="btn_save">Сохранить</button>
+<!-- ================= WAITING ================= -->
+<div id="screen-waiting" class="screen">
+  <h1>⏳ Ожидание соперника</h1>
+  <div class="card" id="waitingLinkBlock">
+    <p>Отправь эту ссылку другу — он подключится автоматически:</p>
+    <div style="display:flex; gap:8px;">
+      <input id="waitingLinkInput" type="text" readonly>
+      <button id="copyLinkBtn">Копировать</button>
     </div>
   </div>
-  <div class="card settings-row">
-    <span data-t="settings_theme">Тема</span>
-    <button class="btn btn-secondary" id="themeToggle">🌙</button>
-  </div>
-  <div class="card settings-row">
-    <span data-t="settings_lang">Язык</span>
-    <button class="btn btn-secondary" id="langToggle">RU</button>
-  </div>
-  <div class="card settings-row">
-    <span data-t="settings_sound">Звук</span>
-    <button class="btn btn-secondary" id="soundToggle">🔊</button>
-  </div>
-  <div class="card">
-    <label data-t="settings_privacy">Кто может мне писать</label>
-    <select id="privacySelect">
-      <option value="all" data-t="privacy_all">Все</option>
-      <option value="friends" data-t="privacy_friends">Только друзья</option>
-      <option value="nobody" data-t="privacy_nobody">Никто</option>
-    </select>
-  </div>
-  <div class="card">
-    <label data-t="settings_share">Поделиться профилем</label>
-    <div class="link-row">
-      <input id="shareProfileLink" type="text" readonly>
-      <button class="btn btn-primary" id="copyProfileBtn" data-t="btn_copy">Копировать</button>
-    </div>
-  </div>
-  <div class="card" id="statsBlock">
-    <label data-t="settings_stats">Статистика</label>
-    <div class="stats-grid">
-      <div><b id="statWins">0</b><span data-t="stat_wins">Победы</span></div>
-      <div><b id="statLosses">0</b><span data-t="stat_losses">Поражения</span></div>
-      <div><b id="statDraws">0</b><span data-t="stat_draws">Ничьи</span></div>
-    </div>
-  </div>
-  <button class="btn btn-danger" id="resetProfileBtn" data-t="btn_reset_profile">Сбросить профиль</button>
-</section>
+  <p id="invite_waiting" style="display:none; text-align:center;">Ждём, пока друг примет приглашение...</p>
+  <button id="cancelWaitingBtn" class="btn-secondary" style="width:100%;">Отменить</button>
+</div>
 
-<!-- ЛИДЕРБОРД -->
-<section id="screen-leaderboard" class="screen hidden">
-  <div class="topbar"><button class="btn btn-icon" id="leaderboardBack">←</button><h2 data-t="leaders_title">Лидерборд</h2></div>
-  <div id="leaderboardList" class="list"></div>
-</section>
+<!-- ================= CONNECTING ================= -->
+<div id="screen-connecting" class="screen">
+  <h1 style="text-align:center; margin-top:80px;">🔄 Подключение...</h1>
+</div>
 
-<!-- ДРУЗЬЯ -->
-<section id="screen-friends" class="screen hidden">
-  <div class="topbar"><button class="btn btn-icon" id="friendsBack">←</button><h2 data-t="friends_title">Друзья</h2></div>
-  <div class="tabs">
-    <button class="tab-btn active" id="tabFriends" data-t="tab_friends">Друзья</button>
-    <button class="tab-btn" id="tabRequests"><span data-t="tab_requests">Заявки</span> <span class="badge hidden" id="reqCountBadge">0</span></button>
+<!-- ================= AI SETUP ================= -->
+<div id="screen-ai-setup" class="screen">
+  <h1>🤖 Игра с компьютером</h1>
+  <div class="card" data-diff="easy">😌 Лёгкая</div>
+  <div class="card" data-diff="medium">🧠 Средняя</div>
+  <div class="card" data-diff="hard">🔥 Тяжёлая</div>
+  <div style="display:flex; gap:10px; margin-top:10px;">
+    <button id="backFromAIBtn" class="btn-secondary" style="flex:1;">Назад</button>
+    <button id="startAIGameBtn" style="flex:2;">Начать игру</button>
   </div>
-  <div class="card add-friend-row">
-    <input id="addFriendLoginInput" type="text" placeholder="логин друга" data-tph="ph_friend_login">
-    <button class="btn btn-primary" id="addFriendBtn" data-t="btn_add">Добавить</button>
-  </div>
-  <p class="error-text" id="addFriendMsg"></p>
-  <div id="friendsList" class="list"></div>
-  <div id="requestsList" class="list hidden"></div>
-</section>
+</div>
 
-<!-- ЛИЧНЫЙ ЧАТ -->
-<section id="screen-chat" class="screen hidden">
-  <div class="topbar"><button class="btn btn-icon" id="chatBack">←</button><h2 id="chatPartnerName">—</h2></div>
-  <div id="chatMessages" class="chat-messages"></div>
-  <div class="chat-input-row">
-    <input id="chatInput" type="text" data-tph="ph_message">
-    <button class="btn btn-primary" id="chatSendBtn">➤</button>
-  </div>
-</section>
-
-<!-- НАУЧИТЬСЯ ИГРАТЬ -->
-<section id="screen-learn" class="screen hidden">
-  <div class="topbar"><button class="btn btn-icon" id="learnBack">←</button><h2 data-t="learn_title">Научиться играть</h2></div>
-  <div class="tabs">
-    <button class="tab-btn active" id="learnTabLessons" data-t="learn_tab_lessons">Уроки</button>
-    <button class="tab-btn" id="learnTabAI" data-t="learn_tab_ai">Спроси помощника</button>
-  </div>
-  <div id="lessonsList" class="accordion"></div>
-  <div id="aiTutorBox" class="hidden">
-    <div id="aiTutorMessages" class="chat-messages"></div>
-    <div class="chips" id="aiTutorChips"></div>
-    <div class="chat-input-row">
-      <input id="aiTutorInput" type="text" data-tph="ph_ask">
-      <button class="btn btn-primary" id="aiTutorSendBtn">➤</button>
-    </div>
-  </div>
-</section>
-
-<!-- ИГРА -->
-<section id="screen-game" class="screen hidden">
-  <div class="game-top-bar">
-    <button class="btn btn-icon" id="gameExitBtn">←</button>
-    <div id="turnIndicator" class="turn-indicator">—</div>
-    <button class="btn btn-icon" id="toggleChatBtn">💬</button>
-  </div>
-  <div class="player-strip" id="playerTop">
-    <span class="p-avatar">?</span><span class="p-name">—</span>
-  </div>
+<!-- ================= GAME ================= -->
+<div id="screen-game" class="screen">
+  <div class="player-bar"><span id="playerTop">Opponent</span><span>⚫</span></div>
 
   <div class="board-wrap">
-    <div class="rank-labels" id="rankLabels"></div>
-    <div class="board-col">
-      <div class="board" id="board"></div>
-      <div class="file-labels" id="fileLabels"></div>
-    </div>
+    <div id="rankLabels"></div>
+    <div></div>
+    <div id="board"></div>
+    <div id="fileLabels"></div>
   </div>
 
-  <div class="player-strip" id="playerBottom">
-    <span class="p-avatar">?</span><span class="p-name">—</span>
+  <div class="player-bar" style="margin-top:10px;"><span id="playerBottom">You</span><span>⚪</span></div>
+  <div id="gameStatusText"></div>
+
+  <div style="display:flex; justify-content:center; margin:10px 0;">
+    <button id="resignBtn" class="btn-danger">🏳 Сдаться</button>
   </div>
 
-  <div class="game-controls">
-    <button class="btn btn-danger" id="resignBtn" data-t="btn_resign">Сдаться</button>
-  </div>
-
-  <div id="gameChatPanel" class="game-chat-panel hidden">
-    <div id="gameChatMessages" class="chat-messages"></div>
+  <div class="card">
+    <h3>💬 Чат партии</h3>
+    <div id="gameChatPanel"></div>
     <div class="chat-input-row">
-      <input id="gameChatInput" type="text" data-tph="ph_message">
-      <button class="btn btn-primary" id="gameChatSendBtn">➤</button>
+      <input id="gameChatInput" type="text" placeholder="Сообщение...">
+      <button id="gameChatSendBtn">➤</button>
     </div>
   </div>
-</section>
 
-<!-- МОДАЛКИ -->
-<div class="modal-overlay hidden" id="modalPromotion">
-  <div class="modal-box">
-    <h3 data-t="promo_title">Выбери фигуру</h3>
-    <div class="promo-row" id="promoRow"></div>
+  <button class="btn-secondary back-to-menu" style="width:100%; margin-top:10px;">← В меню</button>
+</div>
+
+<!-- ================= LEADERBOARD ================= -->
+<div id="screen-leaderboard" class="screen">
+  <h1>🏆 Лидерборд</h1>
+  <div id="leaderboardList"></div>
+  <button class="btn-secondary back-to-menu" style="width:100%;">← В меню</button>
+</div>
+
+<!-- ================= FRIENDS ================= -->
+<div id="screen-friends" class="screen">
+  <h1>👥 Друзья</h1>
+  <div class="card">
+    <div style="display:flex; gap:8px;">
+      <input id="addFriendLoginInput" type="text" placeholder="Логин друга">
+      <button id="addFriendBtn">Добавить</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div id="tabFriends" class="active">Друзья</div>
+    <div id="tabRequests">Заявки <span id="reqCountBadge" style="display:none;">0</span></div>
+  </div>
+  <div id="friendsList"></div>
+  <div id="requestsList" style="display:none;"></div>
+  <button class="btn-secondary back-to-menu" style="width:100%; margin-top:10px;">← В меню</button>
+</div>
+
+<!-- ================= DIRECT CHAT ================= -->
+<div id="screen-chat" class="screen">
+  <h1 id="chatWithName">Chat</h1>
+  <div id="chatMessages"></div>
+  <div class="chat-input-row">
+    <input id="chatInput" type="text" placeholder="Сообщение...">
+    <button id="chatSendBtn">➤</button>
+  </div>
+  <button id="backFromChatBtn" class="btn-secondary" style="width:100%; margin-top:10px;">← Назад</button>
+</div>
+
+<!-- ================= LEARN ================= -->
+<div id="screen-learn" class="screen">
+  <h1>📖 Научиться играть</h1>
+  <div class="tabs">
+    <div id="learnTabLessons" class="active">Уроки</div>
+    <div id="learnTabAI">ИИ-помощник</div>
+  </div>
+  <div id="lessonsList"></div>
+  <div id="aiTutorBox" style="display:none;">
+    <div id="aiTutorMessages"></div>
+    <div class="chat-input-row" style="margin-top:10px;">
+      <input id="aiTutorInput" type="text" placeholder="Спроси про правила шахмат...">
+      <button id="aiTutorSendBtn">➤</button>
+    </div>
+  </div>
+  <button class="btn-secondary back-to-menu" style="width:100%; margin-top:10px;">← В меню</button>
+</div>
+
+<!-- ================= SETTINGS ================= -->
+<div id="screen-settings" class="screen">
+  <h1>⚙️ Настройки</h1>
+
+  <div class="settings-block">
+    <h3>Имя</h3>
+    <div style="display:flex; gap:8px;">
+      <input id="settingsNameInput" type="text" maxlength="20">
+      <button id="saveNameBtn">Сохранить</button>
+    </div>
+  </div>
+
+  <div class="settings-block">
+    <h3>Тема</h3>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-secondary" data-theme-option="dark" style="flex:1;">🌙 Тёмная</button>
+      <button class="btn-secondary" data-theme-option="light" style="flex:1;">☀️ Светлая</button>
+    </div>
+  </div>
+
+  <div class="settings-block">
+    <h3>Язык</h3>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-secondary" data-lang-option="ru" style="flex:1;">RU</button>
+      <button class="btn-secondary" data-lang-option="en" style="flex:1;">EN</button>
+    </div>
+  </div>
+
+  <div class="settings-block">
+    <h3>Звук</h3>
+    <label style="display:flex; align-items:center; gap:10px;">
+      <input type="checkbox" id="soundToggle" style="width:auto;"> Звуковые эффекты
+    </label>
+  </div>
+
+  <div class="settings-block">
+    <h3>Кто может мне писать</h3>
+    <select id="privacySelect">
+      <option value="all">Все</option>
+      <option value="friends">Только друзья</option>
+      <option value="nobody">Никто</option>
+    </select>
+  </div>
+
+  <div class="settings-block">
+    <h3>Поделиться профилем</h3>
+    <div style="display:flex; gap:8px;">
+      <input id="shareProfileLink" type="text" readonly>
+      <button id="copyProfileLinkBtn">Копировать</button>
+    </div>
+  </div>
+
+  <div class="settings-block">
+    <h3>Статистика</h3>
+    <p>Победы: <b id="statWins">0</b> · Поражения: <b id="statLosses">0</b> · Ничьи: <b id="statDraws">0</b></p>
+  </div>
+
+  <button id="resetProfileBtn" class="btn-danger" style="width:100%;">Сбросить профиль</button>
+  <button class="btn-secondary back-to-menu" style="width:100%; margin-top:10px;">← В меню</button>
+</div>
+
+<!-- ================= SPECTATE: LIST OF LIVE GAMES ================= -->
+<div id="screen-spectate-list" class="screen">
+  <h1>👁 Эфир</h1>
+  <p>Смотри партии других игроков в реальном времени и общайся с другими зрителями в чате.</p>
+  <div id="spectateList"></div>
+  <button class="btn-secondary back-to-menu" style="width:100%; margin-top:10px;">← В меню</button>
+</div>
+
+<!-- ================= SPECTATE: VIEW ================= -->
+<div id="screen-spectate-view" class="screen">
+  <div class="player-bar"><span id="spectateTopName">Player 2</span></div>
+
+  <div class="board-wrap">
+    <div id="spectateRankLabels"></div>
+    <div></div>
+    <div id="spectateBoard"></div>
+    <div id="spectateFileLabels"></div>
+  </div>
+
+  <div class="player-bar" style="margin-top:10px;"><span id="spectateBottomName">Player 1</span></div>
+  <div id="spectateStatusText"></div>
+
+  <div class="card">
+    <h3>💬 Чат зрителей</h3>
+    <div id="spectateChatPanel"></div>
+    <div class="chat-input-row">
+      <input id="spectateChatInput" type="text" placeholder="Сообщение зрителям...">
+      <button id="spectateChatSendBtn">➤</button>
+    </div>
+  </div>
+
+  <button id="leaveSpectateBtn" class="btn-secondary" style="width:100%; margin-top:10px;">← К списку эфиров</button>
+</div>
+
+<!-- ================= ROYALE: SETUP ================= -->
+<div id="screen-royale-setup" class="screen">
+  <h1>♛ Королевская битва</h1>
+  <p>4 игрока, каждый со своей армией на обычной доске. Ходят по кругу. Получил мат — выбываешь, твои фигуры остаются на доске. Побеждает последний король!</p>
+
+  <div class="card">
+    <h3>Создать комнату</h3>
+    <p>Создай комнату и отправь ссылку трём друзьям, либо жди случайных игроков.</p>
+    <button id="createRoyaleBtn" style="width:100%;">Создать битву</button>
+  </div>
+
+  <div class="card">
+    <h3>Присоединиться по ссылке</h3>
+    <p>Если у тебя есть ссылка от друга — просто перейди по ней, подключение произойдёт автоматически.</p>
+  </div>
+
+  <button class="btn-secondary back-to-menu" style="width:100%;">← В меню</button>
+</div>
+
+<!-- ================= ROYALE: WAITING ================= -->
+<div id="screen-royale-waiting" class="screen">
+  <h1>⏳ Сбор игроков</h1>
+  <div class="card">
+    <p>Отправь эту ссылку друзьям (нужно ещё <span id="royaleSlotsLeft">3</span>):</p>
+    <div style="display:flex; gap:8px;">
+      <input id="royaleLinkInput" type="text" readonly>
+      <button id="copyRoyaleLinkBtn">Копировать</button>
+    </div>
+  </div>
+  <div id="royalePlayersList"></div>
+  <button id="cancelRoyaleBtn" class="btn-secondary" style="width:100%;">Отменить</button>
+</div>
+
+<!-- ================= ROYALE: GAME ================= -->
+<div id="screen-royale-game" class="screen">
+  <div id="royalePlayersBar" style="display:flex; justify-content:space-between; gap:6px; flex-wrap:wrap;"></div>
+
+  <div class="board-wrap" style="margin-top:12px;">
+    <div id="royaleRankLabels"></div>
+    <div></div>
+    <div id="royaleBoard"></div>
+    <div id="royaleFileLabels"></div>
+  </div>
+
+  <div id="royaleStatusText" style="text-align:center; margin:10px 0; font-weight:700; color:var(--gold-bright);"></div>
+
+  <div style="display:flex; justify-content:center;">
+    <button id="royaleResignBtn" class="btn-danger">🏳 Сдаться</button>
+  </div>
+
+  <button class="btn-secondary back-to-menu" style="width:100%; margin-top:10px;">← В меню</button>
+</div>
+
+<!-- ================= MODALS ================= -->
+<div class="modal" id="modalPromotion">
+  <div class="modal-content">
+    <h3 style="text-align:center;">Выбери фигуру</h3>
+    <div class="promotion-choices">
+      <button data-piece="q">♛</button>
+      <button data-piece="r">♜</button>
+      <button data-piece="b">♝</button>
+      <button data-piece="n">♞</button>
+    </div>
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="modalGameOver">
-  <div class="modal-box">
-    <h2 id="gameOverTitle">—</h2>
-    <p id="gameOverText">—</p>
-    <div class="row-gap">
-      <button class="btn btn-primary hidden" id="rematchBtn" data-t="btn_rematch">Реванш</button>
-      <button class="btn btn-secondary" id="gameOverMenuBtn" data-t="btn_to_menu">В меню</button>
+<div class="modal" id="modalGameOver">
+  <div class="modal-content" style="text-align:center;">
+    <h2 id="gameOverText">Игра окончена</h2>
+    <button id="gameOverMenuBtn" style="width:100%; margin-top:10px;">В меню</button>
+  </div>
+</div>
+
+<div class="modal" id="modalPlayerAction">
+  <div class="modal-content" style="text-align:center;">
+    <h3 id="actionPlayerName">Player</h3>
+    <button id="actionMessageBtn" style="width:100%; margin-top:8px;">✉️ Написать</button>
+    <button id="actionAddFriendBtn" style="width:100%; margin-top:8px;">➕ Добавить в друзья</button>
+    <button id="actionCloseBtn" class="btn-secondary" style="width:100%; margin-top:8px;">Отмена</button>
+  </div>
+</div>
+
+<div class="modal" id="modalAddFriendLink">
+  <div class="modal-content" style="text-align:center;">
+    <h3>Добавить <span id="addFriendConfirmName">Player</span> в друзья?</h3>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button id="addFriendConfirmNo" class="btn-secondary" style="flex:1;">Нет</button>
+      <button id="addFriendConfirmYes" style="flex:1;">Да</button>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="modalPlayerAction">
-  <div class="modal-box">
-    <h3 id="modalPlayerName">—</h3>
-    <div class="col-gap">
-      <button class="btn btn-primary" id="actionWriteBtn" data-t="action_write">✉️ Написать</button>
-      <button class="btn btn-accent3" id="actionAddFriendBtn" data-t="action_add_friend">➕ Добавить в друзья</button>
-      <button class="btn btn-secondary" id="actionCancelBtn" data-t="btn_cancel">Отмена</button>
+<div class="modal" id="modalInvite">
+  <div class="modal-content" style="text-align:center;">
+    <h3><span id="inviteFromName">Player</span> приглашает тебя сыграть!</h3>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button id="inviteDeclineBtn" class="btn-secondary" style="flex:1;">Отклонить</button>
+      <button id="inviteAcceptBtn" style="flex:1;">Принять</button>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="modalAddFriendLink">
-  <div class="modal-box">
-    <h3 data-t="add_link_title">Добавить в друзья?</h3>
-    <p id="addFriendLinkText">—</p>
-    <div class="row-gap">
-      <button class="btn btn-primary" id="addFriendLinkConfirm" data-t="btn_add">Добавить</button>
-      <button class="btn btn-secondary" id="addFriendLinkCancel" data-t="btn_cancel">Отмена</button>
+<div class="modal" id="modalRoyaleInvite">
+  <div class="modal-content" style="text-align:center;">
+    <h3><span id="royaleInviteFromName">Player</span> зовёт в королевскую битву!</h3>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button id="royaleInviteDeclineBtn" class="btn-secondary" style="flex:1;">Отклонить</button>
+      <button id="royaleInviteAcceptBtn" style="flex:1;">Принять</button>
     </div>
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="modalInvite">
-  <div class="modal-box">
-    <h3 data-t="invite_title">Приглашение на игру</h3>
-    <p id="inviteText">—</p>
-    <div class="row-gap">
-      <button class="btn btn-primary" id="inviteAccept" data-t="btn_accept">Принять</button>
-      <button class="btn btn-secondary" id="inviteDecline" data-t="btn_decline">Отклонить</button>
-    </div>
-  </div>
-</div>
-
+<!-- ================= SCRIPTS ================= -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.min.js"></script>
