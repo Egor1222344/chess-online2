@@ -58,6 +58,28 @@ function toast(msg){
 function escapeHtml(str){
   const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
 }
+/* ---- защита от старых/битых профилей (отсутствующие поля) ---- */
+function pname(p){ return (p && (p.name || p.nickname)) ? (p.name || p.nickname) : 'Player'; }
+function plogin(p){ return (p && (p.login || p.nicknameLower || p.nickname)) ? (p.login || p.nicknameLower || p.nickname).toLowerCase() : ''; }
+function pskill(p){ return (p && (p.skill || p.skillLevel)) || 'beginner'; }
+function pprivacy(p){ return (p && (p.privacy || p.messagePrivacy)) || 'all'; }
+function normalizeProfile(raw){
+  if(!raw) return null;
+  return {
+    login: plogin(raw),
+    name: pname(raw),
+    skill: pskill(raw),
+    theme: raw.theme || 'dark',
+    lang: raw.lang || 'ru',
+    sound: raw.sound !== false,
+    privacy: pprivacy(raw),
+    wins: raw.wins || 0,
+    losses: raw.losses || 0,
+    draws: raw.draws || 0,
+    friends: raw.friends || [],
+    lastSeen: raw.lastSeen || 0
+  };
+}
 
 /* ===================== TRANSLATIONS ===================== */
 const TRANSLATIONS = {
@@ -281,7 +303,7 @@ async function finishRegistration(){
     createdAt: Date.now(), lastSeen: Date.now()
   };
   await db.collection('players').doc(myId).set(profile);
-  myProfile = profile;
+  myProfile = normalizeProfile(profile);
   applyTheme(); currentLang = 'ru'; localStorage.setItem('cf_lang','ru'); applyTranslations();
   afterProfileReady();
 }
@@ -294,7 +316,7 @@ async function loadMyProfile(){
     goRegStep('login');
     return;
   }
-  myProfile = doc.data();
+  myProfile = normalizeProfile(doc.data());
   currentLang = myProfile.lang || 'ru';
   localStorage.setItem('cf_lang', currentLang);
   applyTheme();
@@ -337,11 +359,13 @@ function afterProfileReady(){
 }
 
 function renderMenu(){
-  $('menuName').textContent = myProfile.name;
-  $('menuLogin').textContent = '@'+myProfile.login;
-  $('menuAvatar').textContent = myProfile.name.charAt(0).toUpperCase();
+  const name = pname(myProfile);
+  const login = plogin(myProfile);
+  $('menuName').textContent = name;
+  $('menuLogin').textContent = login ? '@'+login : '';
+  $('menuAvatar').textContent = name.charAt(0).toUpperCase();
   const skillMap = {none:'skill_none',beginner:'skill_beginner',intermediate:'skill_intermediate',advanced:'skill_advanced'};
-  $('menuSkillBadge').textContent = t(skillMap[myProfile.skill] || 'skill_beginner');
+  $('menuSkillBadge').textContent = t(skillMap[pskill(myProfile)] || 'skill_beginner');
 }
 
 /* ===================== MODALS ===================== */
@@ -366,12 +390,12 @@ $('gameExitBtn').addEventListener('click', exitGameToMenu);
 
 /* ===================== SETTINGS ===================== */
 function openSettings(){
-  $('setNameInput').value = myProfile.name;
+  $('setNameInput').value = pname(myProfile);
   $('themeToggle').textContent = myProfile.theme==='light' ? '☀️' : '🌙';
   $('langToggle').textContent = currentLang.toUpperCase();
   $('soundToggle').textContent = myProfile.sound===false ? '🔇' : '🔊';
   $('privacySelect').value = myProfile.privacy || 'all';
-  $('shareProfileLink').value = `${location.origin}${location.pathname}?addfriend=${myProfile.login}`;
+  $('shareProfileLink').value = `${location.origin}${location.pathname}?addfriend=${plogin(myProfile)}`;
   $('statWins').textContent = myProfile.wins||0;
   $('statLosses').textContent = myProfile.losses||0;
   $('statDraws').textContent = myProfile.draws||0;
@@ -429,7 +453,8 @@ async function openLeaderboard(){
   let rank = 0;
   snap.forEach(doc=>{
     rank++;
-    const p = doc.data();
+    const raw = doc.data();
+    const p = normalizeProfile(raw);
     const row = document.createElement('div');
     row.className = 'list-item';
     row.innerHTML = `
@@ -449,7 +474,7 @@ async function openLeaderboard(){
 }
 function openPlayerAction(targetId, targetProfile){
   pendingPlayerAction = {id:targetId, profile:targetProfile};
-  $('modalPlayerName').textContent = targetProfile.name + ' (@'+targetProfile.login+')';
+  $('modalPlayerName').textContent = targetProfile.name + (targetProfile.login ? ' (@'+targetProfile.login+')' : '');
   showModal('modalPlayerAction');
 }
 $('actionCancelBtn').addEventListener('click', ()=>hideModal('modalPlayerAction'));
@@ -472,8 +497,8 @@ async function sendFriendRequest(targetId, targetProfile){
     .where('fromId','==',myId).where('toId','==',targetId).where('status','==','pending').get();
   if(!existing.empty){ toast(t('request_sent')); return; }
   await db.collection('friendRequests').add({
-    fromId: myId, fromLogin: myProfile.login, fromName: myProfile.name,
-    toId: targetId, toLogin: targetProfile.login, status:'pending', createdAt: Date.now()
+    fromId: myId, fromLogin: plogin(myProfile), fromName: pname(myProfile),
+    toId: targetId, toLogin: plogin(targetProfile), status:'pending', createdAt: Date.now()
   });
   toast(t('request_sent'));
 }
@@ -485,7 +510,7 @@ $('addFriendBtn').addEventListener('click', async ()=>{
   const snap = await db.collection('players').where('login','==',login).get();
   if(snap.empty){ $('addFriendMsg').textContent = currentLang==='ru' ? 'Игрок не найден' : 'Player not found'; return; }
   const doc = snap.docs[0];
-  await sendFriendRequest(doc.id, doc.data());
+  await sendFriendRequest(doc.id, normalizeProfile(doc.data()));
   $('addFriendLoginInput').value = '';
 });
 $('addFriendLinkConfirm').addEventListener('click', async ()=>{
@@ -494,7 +519,7 @@ $('addFriendLinkConfirm').addEventListener('click', async ()=>{
   const snap = await db.collection('players').where('login','==',pendingAddFriendTarget).get();
   if(!snap.empty){
     const doc = snap.docs[0];
-    await sendFriendRequest(doc.id, doc.data());
+    await sendFriendRequest(doc.id, normalizeProfile(doc.data()));
   }
   pendingAddFriendTarget = null;
 });
@@ -523,11 +548,13 @@ async function renderFriendsList(){
   const now = Date.now();
   const items = [];
   for(const fid of ids){
-    const doc = await db.collection('players').doc(fid).get();
-    if(!doc.exists) continue;
-    const p = doc.data();
-    const online = p.lastSeen && (now - p.lastSeen < 90000);
-    items.push({id:fid, p, online});
+    try{
+      const doc = await db.collection('players').doc(fid).get();
+      if(!doc.exists) continue;
+      const p = normalizeProfile(doc.data());
+      const online = p.lastSeen && (now - p.lastSeen < 90000);
+      items.push({id:fid, p, online});
+    }catch(e){ console.warn('friend load error', fid, e); }
   }
   list.innerHTML = '';
   items.forEach(({id,p,online})=>{
@@ -537,7 +564,7 @@ async function renderFriendsList(){
       <span class="avatar">${escapeHtml(p.name.charAt(0).toUpperCase())}</span>
       <div class="li-info">
         <div class="li-name">${escapeHtml(p.name)}</div>
-        <div class="li-sub"><span class="online-dot ${online?'online':''}"></span>${online ? (currentLang==='ru'?'в сети':'online') : '@'+escapeHtml(p.login)}</div>
+        <div class="li-sub"><span class="online-dot ${online?'online':''}"></span>${online ? (currentLang==='ru'?'в сети':'online') : (p.login ? '@'+escapeHtml(p.login) : '')}</div>
       </div>
       <div class="li-actions">
         <button class="btn btn-primary" data-act="play">🎮</button>
@@ -555,13 +582,15 @@ async function renderRequestsList(){
   if(snap.empty){ list.innerHTML = `<p class="hint">${t('no_requests')}</p>`; }
   snap.forEach(doc=>{
     const r = doc.data();
+    const fromName = r.fromName || 'Player';
+    const fromLogin = r.fromLogin || '';
     const row = document.createElement('div');
     row.className = 'list-item';
     row.innerHTML = `
-      <span class="avatar">${escapeHtml(r.fromName.charAt(0).toUpperCase())}</span>
+      <span class="avatar">${escapeHtml(fromName.charAt(0).toUpperCase())}</span>
       <div class="li-info">
-        <div class="li-name">${escapeHtml(r.fromName)}</div>
-        <div class="li-sub">@${escapeHtml(r.fromLogin)}</div>
+        <div class="li-name">${escapeHtml(fromName)}</div>
+        <div class="li-sub">${fromLogin ? '@'+escapeHtml(fromLogin) : ''}</div>
       </div>
       <div class="li-actions">
         <button class="btn btn-primary" data-act="acc">✓</button>
@@ -601,7 +630,7 @@ async function updateFriendReqBadge(){
 
 /* ===================== MESSAGE PRIVACY ===================== */
 async function tryOpenChat(targetId, targetProfile){
-  const privacy = targetProfile.privacy || 'all';
+  const privacy = pprivacy(targetProfile);
   const isFriend = (myProfile.friends||[]).includes(targetId);
   if(privacy==='nobody' && targetId!==myId){ toast(t('privacy_blocked')); return; }
   if(privacy==='friends' && !isFriend && targetId!==myId){ toast(t('privacy_blocked')); return; }
@@ -612,7 +641,7 @@ async function tryOpenChat(targetId, targetProfile){
 function chatIdFor(a,b){ return [a,b].sort().join('__'); }
 function openDirectChat(targetId, targetProfile){
   currentChatPartnerId = targetId;
-  $('chatPartnerName').textContent = targetProfile.name;
+  $('chatPartnerName').textContent = pname(targetProfile);
   showScreen('screen-chat');
   const cid = chatIdFor(myId, targetId);
   if(chatUnsub) chatUnsub();
@@ -653,8 +682,9 @@ function listenInvites(){
         if(ch.type==='added'){
           const inv = ch.doc.data();
           window._incomingInvite = {id: ch.doc.id, ...inv};
+          const fromName = inv.fromName || 'Player';
           $('inviteText').textContent = currentLang==='ru'
-            ? `${inv.fromName} приглашает вас на партию` : `${inv.fromName} invites you to a game`;
+            ? `${fromName} приглашает вас на партию` : `${fromName} invites you to a game`;
           showModal('modalInvite');
         }
       });
@@ -678,12 +708,12 @@ async function inviteFriendToPlay(friendId, friendProfile){
   const roomRef = db.collection('rooms').doc();
   const hostColor = Math.random()<0.5 ? 'w' : 'b';
   await roomRef.set({
-    hostId: myId, hostLogin: myProfile.login, hostName: myProfile.name, hostColor,
-    guestId: friendId, guestLogin: friendProfile.login, guestName: friendProfile.name,
+    hostId: myId, hostLogin: plogin(myProfile), hostName: pname(myProfile), hostColor,
+    guestId: friendId, guestLogin: plogin(friendProfile), guestName: pname(friendProfile),
     fen: INITIAL_FEN, status:'invited', chat:[], winner:null, reason:null, createdAt: Date.now()
   });
   await db.collection('invites').add({
-    roomId: roomRef.id, fromId: myId, fromName: myProfile.name, toId: friendId, status:'pending', createdAt: Date.now()
+    roomId: roomRef.id, fromId: myId, fromName: pname(myProfile), toId: friendId, status:'pending', createdAt: Date.now()
   });
   showScreen('screen-waiting');
   $('waitingLinkBlock').classList.add('hidden');
@@ -707,7 +737,7 @@ async function createRoomWithLink(){
   const roomRef = db.collection('rooms').doc();
   const hostColor = Math.random()<0.5 ? 'w' : 'b';
   await roomRef.set({
-    hostId: myId, hostLogin: myProfile.login, hostName: myProfile.name, hostColor,
+    hostId: myId, hostLogin: plogin(myProfile), hostName: pname(myProfile), hostColor,
     guestId: null, guestLogin: null, guestName: null,
     fen: INITIAL_FEN, status:'waiting', chat:[], winner:null, reason:null, createdAt: Date.now()
   });
@@ -753,7 +783,7 @@ async function joinRoomByLink(roomId){
     return;
   }
   await ref.update({
-    guestId: myId, guestLogin: myProfile.login, guestName: myProfile.name, status:'playing'
+    guestId: myId, guestLogin: plogin(myProfile), guestName: pname(myProfile), status:'playing'
   });
   history.replaceState(null,'',location.pathname);
   enterOnlineRoom(roomId);
@@ -777,19 +807,16 @@ function enterOnlineRoom(roomId){
 function handleRoomUpdate(d){
   myColorChar = (d.hostId === myId) ? d.hostColor : (d.hostColor==='w'?'b':'w');
   const amHost = d.hostId === myId;
-  const myName = amHost ? d.hostName : d.guestName;
-  const oppName = amHost ? (d.guestName || '...') : d.hostName;
-  $('playerBottom').querySelector('.p-name').textContent = myName || myProfile.name;
-  $('playerBottom').querySelector('.p-avatar').textContent = (myName||'?').charAt(0).toUpperCase();
+  const myName = (amHost ? d.hostName : d.guestName) || pname(myProfile);
+  const oppName = (amHost ? d.guestName : d.hostName) || '...';
+  $('playerBottom').querySelector('.p-name').textContent = myName;
+  $('playerBottom').querySelector('.p-avatar').textContent = myName.charAt(0).toUpperCase();
   $('playerTop').querySelector('.p-name').textContent = oppName;
-  $('playerTop').querySelector('.p-avatar').textContent = (oppName||'?').charAt(0).toUpperCase();
+  $('playerTop').querySelector('.p-avatar').textContent = oppName.charAt(0).toUpperCase();
 
   if(chessGame.fen() !== d.fen){
-    const prevFen = chessGame.fen();
     chessGame.load(d.fen);
-    if(prevFen !== INITIAL_FEN || d.fen !== INITIAL_FEN){
-      if(d.lastMove) soundMove();
-    }
+    if(d.lastMove) soundMove();
     selectedSquare = null; legalTargets = []; captureTargets = [];
     lastMove = d.lastMove || null;
     renderBoard();
@@ -833,8 +860,9 @@ function startAIGame(){
   selectedSquare = null; legalTargets = []; captureTargets = []; lastMove = null;
   showScreen('screen-game');
   $('gameChatPanel').classList.add('hidden');
-  $('playerBottom').querySelector('.p-name').textContent = myProfile.name;
-  $('playerBottom').querySelector('.p-avatar').textContent = myProfile.name.charAt(0).toUpperCase();
+  const myName = pname(myProfile);
+  $('playerBottom').querySelector('.p-name').textContent = myName;
+  $('playerBottom').querySelector('.p-avatar').textContent = myName.charAt(0).toUpperCase();
   $('playerTop').querySelector('.p-name').textContent = 'AI (' + t('ai_'+aiLevel) + ')';
   $('playerTop').querySelector('.p-avatar').textContent = '🤖';
   renderBoard();
@@ -1155,7 +1183,7 @@ async function sendGameChatMessage(){
   if(!text || !currentRoomId) return;
   $('gameChatInput').value = '';
   await db.collection('rooms').doc(currentRoomId).update({
-    chat: FV.arrayUnion({from:myId, name:myProfile.name, text, time:Date.now()})
+    chat: FV.arrayUnion({from:myId, name:pname(myProfile), text, time:Date.now()})
   });
 }
 
