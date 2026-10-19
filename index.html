@@ -3,85 +3,206 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Шахматы Онлайн</title>
+<title>Chess Online</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="debugInfo" class="debug-bar"></div>
+<div id="inviteBanner" class="invite-banner">
+  <span id="inviteText"></span>
+  <div class="invite-banner-btns">
+    <button id="acceptInviteBtn" data-i18n="accept">Принять</button>
+    <button id="declineInviteBtn" data-i18n="decline">Отклонить</button>
+  </div>
+</div>
 
 <div class="container">
 
+  <!-- REGISTER -->
+  <div id="registerScreen" class="screen">
+    <div class="card">
+      <h1 class="brand">♞ CHESS<span>ONLINE</span></h1>
+      <h2 data-i18n="registerTitle">Создай профиль</h2>
+
+      <label class="field-label" data-i18n="nicknameLabel">Твой никнейм (на английском)</label>
+      <input type="text" id="regNicknameInput" data-i18n-ph="nicknamePlaceholder" placeholder="например: ChessMaster99">
+      <p id="regNicknameError" class="error-text"></p>
+
+      <label class="field-label" data-i18n="skillLabel">Твой уровень игры</label>
+      <div class="skill-grid">
+        <div class="skill-option" data-skill="none">
+          <span class="skill-emoji">🐣</span>
+          <span class="skill-name" data-i18n="skillNever">Вообще не умею</span>
+        </div>
+        <div class="skill-option" data-skill="beginner">
+          <span class="skill-emoji">🌱</span>
+          <span class="skill-name" data-i18n="skillBeginner">Новичок</span>
+        </div>
+        <div class="skill-option" data-skill="intermediate">
+          <span class="skill-emoji">⚔️</span>
+          <span class="skill-name" data-i18n="skillIntermediate">Средний</span>
+        </div>
+        <div class="skill-option" data-skill="advanced">
+          <span class="skill-emoji">👑</span>
+          <span class="skill-name" data-i18n="skillAdvanced">Продвинутый</span>
+        </div>
+      </div>
+
+      <button id="regSubmitBtn" class="btn-main" data-i18n="registerBtn">Начать игру</button>
+    </div>
+  </div>
+
   <!-- MAIN MENU -->
-  <div id="mainMenu" class="screen active">
-    <div class="card card-main">
-      <div class="top-icons">
-        <button class="icon-btn" id="openSettingsBtn" title="Настройки">⚙️</button>
-        <button class="icon-btn" id="openLeaderboardBtn" title="Лидерборд">🏆</button>
+  <div id="mainMenu" class="screen">
+    <div class="card">
+      <h1 class="brand">♞ CHESS<span>ONLINE</span></h1>
+
+      <div class="profile-row">
+        <span class="avatar" id="mainAvatar">?</span>
+        <div class="profile-text">
+          <strong id="mainNickname">Игрок</strong>
+          <span class="badge" id="mainSkillBadge">—</span>
+        </div>
       </div>
 
-      <div class="title-row">
-        <span class="crown">♚</span>
-        <h1>Шахматы<br>Онлайн</h1>
-        <span class="crown">♔</span>
-      </div>
-      <p class="subtitle">Играй с другом в любой точке мира</p>
+      <button id="navPlayFriendBtn" class="btn-main" data-i18n="playFriendBtn">🎮 Играть с другом</button>
+      <button id="navPlayAiBtn" class="btn-main btn-alt" data-i18n="playAiBtn">🤖 Играть с ИИ</button>
 
-      <div class="profile-chip">
-        <span class="avatar" id="avatarInitial">?</span>
-        <span id="currentNickname">Игрок</span>
+      <div class="nav-grid">
+        <button id="navFriendsBtn" class="nav-card">
+          <span class="nav-icon">🤝</span>
+          <span data-i18n="friendsBtn">Друзья</span>
+        </button>
+        <button id="navLeaderboardBtn" class="nav-card">
+          <span class="nav-icon">🏆</span>
+          <span data-i18n="leaderboardBtn">Лидеры</span>
+        </button>
+        <button id="navLearnBtn" class="nav-card">
+          <span class="nav-icon">📖</span>
+          <span data-i18n="learnBtn">Учиться</span>
+        </button>
+        <button id="navSettingsBtn" class="nav-card">
+          <span class="nav-icon">⚙️</span>
+          <span data-i18n="settingsBtn">Настройки</span>
+        </button>
       </div>
+    </div>
+  </div>
 
-      <button id="createGameBtn" class="btn-main">🎮 Создать игру</button>
-      <p class="hint">Чтобы присоединиться к другу — просто перейдите по ссылке, которую он отправит</p>
+  <!-- AI SETUP -->
+  <div id="aiSetupScreen" class="screen">
+    <div class="card">
+      <button class="back-btn" id="backFromAiSetup" data-i18n="backBtn">← Назад</button>
+      <h2 data-i18n="aiSetupTitle">Выбери сложность ИИ</h2>
+      <div class="difficulty-list">
+        <button class="difficulty-card" data-diff="easy">
+          <span class="diff-emoji">🙂</span>
+          <span data-i18n="difficultyEasy">Лёгкая</span>
+        </button>
+        <button class="difficulty-card" data-diff="medium">
+          <span class="diff-emoji">😐</span>
+          <span data-i18n="difficultyMedium">Средняя</span>
+        </button>
+        <button class="difficulty-card" data-diff="hard">
+          <span class="diff-emoji">😈</span>
+          <span data-i18n="difficultyHard">Тяжёлая</span>
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- SETTINGS -->
   <div id="settingsScreen" class="screen">
     <div class="card">
-      <button class="back-btn" id="backFromSettings">← Назад</button>
-      <h2>Настройки аккаунта</h2>
-      <div class="settings-avatar">
-        <span class="avatar avatar-lg" id="settingsAvatarPreview">?</span>
+      <button class="back-btn" id="backFromSettings" data-i18n="backBtn">← Назад</button>
+      <h2 data-i18n="settingsTitle">Настройки</h2>
+
+      <div class="settings-avatar"><span class="avatar avatar-lg" id="settingsAvatarPreview">?</span></div>
+
+      <label class="field-label" data-i18n="nicknameFieldLabel">Ник</label>
+      <input type="text" id="nicknameInput" maxlength="16">
+      <button id="saveNicknameBtn" class="btn-main" data-i18n="saveBtn">💾 Сохранить</button>
+
+      <label class="field-label" data-i18n="themeLabel">Тема</label>
+      <div class="toggle-row">
+        <button id="themeDarkBtn" class="toggle-btn" data-i18n="themeDark">🌙 Тёмная</button>
+        <button id="themeLightBtn" class="toggle-btn" data-i18n="themeLight">☀️ Светлая</button>
       </div>
-      <label class="field-label">Ваш ник</label>
-      <input type="text" id="nicknameInput" maxlength="16" placeholder="Введите ник">
-      <button id="saveNicknameBtn" class="btn-main">💾 Сохранить</button>
+
+      <label class="field-label" data-i18n="languageLabel">Язык</label>
+      <div class="toggle-row">
+        <button id="langRuBtn" class="toggle-btn">RU</button>
+        <button id="langEnBtn" class="toggle-btn">EN</button>
+      </div>
+
+      <label class="field-label" data-i18n="soundLabel">Звук</label>
+      <div class="toggle-row">
+        <button id="soundToggleBtn" class="toggle-btn">🔊 ON</button>
+      </div>
+
       <div class="stats-box">
-        <h3>Ваша статистика</h3>
+        <h3 data-i18n="statsTitle">Статистика</h3>
         <div class="stats-row">
-          <div class="stat"><span class="stat-value" id="statWins">0</span><span class="stat-label">Побед</span></div>
-          <div class="stat"><span class="stat-value" id="statLosses">0</span><span class="stat-label">Поражений</span></div>
-          <div class="stat"><span class="stat-value" id="statDraws">0</span><span class="stat-label">Ничьих</span></div>
+          <div class="stat"><span class="stat-value" id="statWins">0</span><span class="stat-label" data-i18n="winsLabel">Побед</span></div>
+          <div class="stat"><span class="stat-value" id="statLosses">0</span><span class="stat-label" data-i18n="lossesLabel">Поражений</span></div>
+          <div class="stat"><span class="stat-value" id="statDraws">0</span><span class="stat-label" data-i18n="drawsLabel">Ничьих</span></div>
         </div>
       </div>
+
+      <div class="stats-box">
+        <h3 data-i18n="matchHistoryTitle">Последние партии</h3>
+        <div id="matchHistoryList"></div>
+      </div>
+
+      <button id="resetProfileBtn" class="btn-secondary danger" data-i18n="resetBtn">🗑️ Сбросить профиль</button>
     </div>
   </div>
 
   <!-- LEADERBOARD -->
   <div id="leaderboardScreen" class="screen">
     <div class="card card-wide">
-      <button class="back-btn" id="backFromLeaderboard">← Назад</button>
-      <h2>🏆 Лидерборд</h2>
-      <div id="leaderboardList" class="leaderboard-list">
-        <p class="hint">Загрузка...</p>
+      <button class="back-btn" id="backFromLeaderboard" data-i18n="backBtn">← Назад</button>
+      <h2 data-i18n="leaderboardTitle">🏆 Лидерборд</h2>
+      <div id="leaderboardList" class="leaderboard-list"></div>
+    </div>
+  </div>
+
+  <!-- FRIENDS -->
+  <div id="friendsScreen" class="screen">
+    <div class="card card-wide">
+      <button class="back-btn" id="backFromFriends" data-i18n="backBtn">← Назад</button>
+      <h2 data-i18n="friendsTitle">🤝 Друзья</h2>
+      <div class="link-row">
+        <input type="text" id="addFriendInput" data-i18n-ph="addFriendPlaceholder" placeholder="Ник друга">
+        <button id="addFriendBtn" data-i18n="addFriendBtn">Добавить</button>
       </div>
+      <p id="addFriendMsg" class="error-text"></p>
+      <div id="friendsList" class="leaderboard-list"></div>
+    </div>
+  </div>
+
+  <!-- LEARN -->
+  <div id="learnScreen" class="screen">
+    <div class="card card-wide">
+      <button class="back-btn" id="backFromLearn" data-i18n="backBtn">← Назад</button>
+      <h2 data-i18n="learnTitle">📖 Научиться играть</h2>
+      <div id="learnAccordion" class="learn-accordion"></div>
     </div>
   </div>
 
   <!-- WAITING -->
   <div id="waitingScreen" class="screen">
     <div class="card">
-      <h2>Ожидание соперника...</h2>
-      <p>Ваш цвет: <strong id="yourColorDisplay"></strong></p>
+      <h2 data-i18n="waitingTitle">Ожидание соперника...</h2>
+      <p><span data-i18n="yourColorLabel">Ваш цвет:</span> <strong id="yourColorDisplay"></strong></p>
       <div class="link-row">
         <input type="text" id="roomLinkInput" readonly>
-        <button id="copyLinkBtn">📋 Копировать</button>
+        <button id="copyLinkBtn" data-i18n="copyBtn">📋 Копировать</button>
       </div>
-      <p class="hint">Отправьте эту ссылку другу</p>
+      <p class="hint" data-i18n="hintJoin">Отправьте эту ссылку другу</p>
       <div class="spinner"></div>
     </div>
   </div>
@@ -89,7 +210,7 @@
   <!-- CONNECTING -->
   <div id="connectingScreen" class="screen">
     <div class="card">
-      <h2>Подключение к игре...</h2>
+      <h2 data-i18n="connectingTitle">Подключение к игре...</h2>
       <div class="spinner"></div>
     </div>
   </div>
@@ -113,23 +234,19 @@
           </div>
         </div>
         <p id="gameStatus" class="status"></p>
-
         <div id="movesList" class="moves-list"></div>
-
         <div class="btn-row">
-          <button id="resignBtn" class="btn-secondary">🏳️ Сдаться</button>
-          <button id="rematchBtn" class="btn-secondary">🔄 Реванш</button>
+          <button id="resignBtn" class="btn-secondary" data-i18n="resignBtn">🏳️ Сдаться</button>
+          <button id="rematchBtn" class="btn-secondary" data-i18n="rematchBtn">🔄 Реванш</button>
         </div>
-
-        <div class="chat-box">
+        <div class="chat-box" id="chatBox">
           <div id="chatMessages" class="chat-messages"></div>
           <div class="chat-input-row">
-            <input type="text" id="chatInput" placeholder="Сообщение...">
+            <input type="text" id="chatInput" data-i18n-ph="chatPlaceholder" placeholder="Сообщение...">
             <button id="sendChatBtn">➤</button>
           </div>
         </div>
       </div>
-
       <div id="chessboard" class="chessboard"></div>
     </div>
   </div>
@@ -138,7 +255,7 @@
 
 <div id="promotionModal" class="modal">
   <div class="modal-content">
-    <h3>Выберите фигуру</h3>
+    <h3 data-i18n="choosePiece">Выберите фигуру</h3>
     <div class="promotion-pieces">
       <span class="promotion-piece" data-piece="q">♕</span>
       <span class="promotion-piece" data-piece="r">♖</span>
@@ -151,8 +268,8 @@
 <div id="gameOverModal" class="modal">
   <div class="modal-content">
     <h2 id="gameOverMessage"></h2>
-    <button id="modalRematchBtn" class="btn-main">🔄 Реванш</button>
-    <button id="modalHomeBtn" class="btn-secondary">🏠 На главную</button>
+    <button id="modalRematchBtn" class="btn-main" data-i18n="rematchBtn">🔄 Реванш</button>
+    <button id="modalHomeBtn" class="btn-secondary" data-i18n="homeBtn">🏠 На главную</button>
   </div>
 </div>
 
