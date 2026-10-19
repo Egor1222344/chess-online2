@@ -75,6 +75,7 @@
         <button id="navFriendsBtn" class="nav-card">
           <span class="nav-icon">🤝</span>
           <span data-i18n="friendsBtn">Друзья</span>
+          <span id="navFriendsBadge" class="count-badge" style="display:none;"></span>
         </button>
         <button id="navLeaderboardBtn" class="nav-card">
           <span class="nav-icon">🏆</span>
@@ -143,6 +144,15 @@
         <button id="soundToggleBtn" class="toggle-btn">🔊 ON</button>
       </div>
 
+      <label class="field-label" data-i18n="privacyLabel">Кто может писать вам</label>
+      <div class="toggle-row">
+        <button id="privacyAllBtn" class="toggle-btn" data-i18n="privacyAll">Все</button>
+        <button id="privacyFriendsBtn" class="toggle-btn" data-i18n="privacyFriends">Друзья</button>
+        <button id="privacyNobodyBtn" class="toggle-btn" data-i18n="privacyNobody">Никто</button>
+      </div>
+
+      <button id="shareProfileBtn" class="btn-secondary" data-i18n="shareProfileBtn" style="margin-top:14px;">🔗 Поделиться профилем</button>
+
       <div class="stats-box">
         <h3 data-i18n="statsTitle">Статистика</h3>
         <div class="stats-row">
@@ -175,12 +185,37 @@
     <div class="card card-wide">
       <button class="back-btn" id="backFromFriends" data-i18n="backBtn">← Назад</button>
       <h2 data-i18n="friendsTitle">🤝 Друзья</h2>
-      <div class="link-row">
-        <input type="text" id="addFriendInput" data-i18n-ph="addFriendPlaceholder" placeholder="Ник друга">
-        <button id="addFriendBtn" data-i18n="addFriendBtn">Добавить</button>
+
+      <div class="toggle-row">
+        <button id="friendsTabBtn" class="toggle-btn active"><span data-i18n="friendsTab">Друзья</span></button>
+        <button id="requestsTabBtn" class="toggle-btn"><span data-i18n="requestsTab">Заявки</span> <span id="requestsCountBadge" class="count-badge" style="display:none;"></span></button>
       </div>
-      <p id="addFriendMsg" class="error-text"></p>
-      <div id="friendsList" class="leaderboard-list"></div>
+
+      <div id="friendsPane">
+        <div class="link-row">
+          <input type="text" id="addFriendInput" data-i18n-ph="addFriendPlaceholder" placeholder="Ник друга">
+          <button id="addFriendBtn" data-i18n="addFriendBtn">Добавить</button>
+        </div>
+        <p id="addFriendMsg" class="error-text"></p>
+        <div id="friendsList" class="leaderboard-list"></div>
+      </div>
+
+      <div id="requestsPane" style="display:none;">
+        <div id="requestsList" class="leaderboard-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECT CHAT -->
+  <div id="directChatScreen" class="screen">
+    <div class="card">
+      <button class="back-btn" id="backFromDirectChat" data-i18n="backBtn">← Назад</button>
+      <h2 id="directChatTitle">Chat</h2>
+      <div id="directChatMessages" class="chat-messages direct-chat-messages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="directChatInput" data-i18n-ph="chatPlaceholder" placeholder="Сообщение...">
+        <button id="sendDirectChatBtn">➤</button>
+      </div>
     </div>
   </div>
 
@@ -247,7 +282,14 @@
           </div>
         </div>
       </div>
-      <div id="chessboard" class="chessboard"></div>
+
+      <div class="board-area">
+        <div class="board-row">
+          <div id="rankLabels" class="rank-labels"></div>
+          <div id="chessboard" class="chessboard"></div>
+        </div>
+        <div id="fileLabels" class="file-labels"></div>
+      </div>
     </div>
   </div>
 
@@ -270,6 +312,24 @@
     <h2 id="gameOverMessage"></h2>
     <button id="modalRematchBtn" class="btn-main" data-i18n="rematchBtn">🔄 Реванш</button>
     <button id="modalHomeBtn" class="btn-secondary" data-i18n="homeBtn">🏠 На главную</button>
+  </div>
+</div>
+
+<div id="playerActionModal" class="modal">
+  <div class="modal-content">
+    <div class="settings-avatar"><span class="avatar avatar-lg" id="paAvatar">?</span></div>
+    <h3 id="paNickname">Player</h3>
+    <button id="paMessageBtn" class="btn-main" data-i18n="messageBtn">✉️ Написать</button>
+    <button id="paAddFriendBtn" class="btn-secondary" data-i18n="addFriendBtnModal">➕ Добавить в друзья</button>
+    <button id="paCloseBtn" class="btn-secondary" data-i18n="closeBtn">Закрыть</button>
+  </div>
+</div>
+
+<div id="addFriendConfirmModal" class="modal">
+  <div class="modal-content">
+    <h3 id="addFriendConfirmText"></h3>
+    <button id="confirmAddFriendBtn" class="btn-main" data-i18n="accept">Принять</button>
+    <button id="cancelAddFriendBtn" class="btn-secondary" data-i18n="decline">Отклонить</button>
   </div>
 </div>
 
